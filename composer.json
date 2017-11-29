@@ -1,6 +1,6 @@
 {
 	"name": "jeeglo/email-service-sdk",
-	"description": "ABC",
+	"description": "Uniform SDK to integrate with popular marketing email services.",
 	"type": "Library",
 	"license": "MIT",
 	"version": "1.0.3",
