@@ -1,7 +1,7 @@
 <?php
 
 namespace Jeeglo\EmailService\Drivers;
-use Ctct\ConstantContact;
+use Ctct\ConstantContact as ConstantContactAPI;
 
 class ConstantContact 
 {
@@ -14,7 +14,7 @@ class ConstantContact
         // @todo Throw exception if API key is not available
         $this->api_key = $credentials['api_key'];
         $this->access_token = $credentials['access_token'];
-        $cc = new ConstantContact($this->api_key);
+        $cc = new ConstantContactAPI($this->api_key);
     }   
 
     /**
