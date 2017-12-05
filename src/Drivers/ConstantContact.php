@@ -2,19 +2,29 @@
 
 namespace Jeeglo\EmailService\Drivers;
 use Ctct\ConstantContact as ConstantContactAPI;
+use Ctct\Exceptions\CtctException;
+use Ctct\Components\Contacts\Contact;
+use Ctct\Auth\CtctOAuth2;
+use Ctct\Exceptions\OAuth2Exception;
 
 class ConstantContact 
 {
     protected $api_key;
+    protected $secret_key;
     protected $access_token;
+    protected $redirect_url;
     protected $cc;
+    protected $oauth;
 
     public function __construct($credentials) {
         
         // @todo Throw exception if API key is not available
         $this->api_key = $credentials['api_key'];
-        $this->access_token = $credentials['access_token'];
-        $cc = new ConstantContactAPI($this->api_key);
+        $this->secret_key = $credentials['secret_key'];
+        $this->redirect_url = $credentials['redirect_url'];
+        $this->access_token = (isset($credentials['access_token']) ? $credentials['access_token'] : null);
+        $this->cc = new ConstantContactAPI($this->api_key);
+        $this->oauth = new CtctOAuth2($this->api_key, $this->secret_key, $this->redirect_url);
     }   
 
     /**
@@ -24,11 +34,12 @@ class ConstantContact
     public function getLists()
     {
         try {
+
             $lists = $this->cc->getLists($this->access_token);
 
             $error = isset($lists->error) ? true : false; 
 
-            if(count($list_data) > 0 && !$error) {
+            if(count($lists) > 0 && !$error) {
                 return $this->response($lists);
             } else {
                 throw new \Exception("Error Processing Request", 1);
@@ -72,6 +83,48 @@ class ConstantContact
         } catch (Exception $e) { // Catch any exceptions
             throw new \Exception($e->getMessage(), 1);
             
+        }
+    }
+
+    /**
+     * Call to Email service and get OAuth Url
+     * @return [array]
+     */
+    public function connect()
+    {
+        // Make Call to ConstantContact and return OAuth Url
+        return ['url' => $this->oauth->getAuthorizationUrl()] ;
+    }
+
+    /**
+     * Get response from Email Service after user Allow access to our application
+     * @return [array]
+     */
+    public function getConnectData()
+    {
+        // If error found, return
+        if (isset($_GET['error'])) {
+            throw new \Exception($_GET['error']);
+        }
+
+        // If user has successfully allowed access to our application then we have code on callback
+        if (isset($_GET['code'])) {
+            
+            try {
+                // Get Access token from OAuth
+                $accessToken = $this->oauth->getAccessToken($_GET['code']);
+                $accessToken = $accessToken['access_token'];
+                
+                // return access token
+                return ['access_token' => $accessToken];
+
+            } catch (OAuth2Exception $ex) {
+                throw new \Exception($ex->getMessage());
+            }
+
+        } else {
+            // if no code found in Parameter, return failed response
+            return $this->failedResponse();
         }
     }
 

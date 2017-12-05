@@ -16,7 +16,7 @@
 		"mizanur/icontact-api-php": "2.2",
 		"mailerlite/mailerlite-api-v2-php-sdk": "0.2.1",
 		"drewm/drip": "0.7",
-		"constantcontact/constantcontact": "2.1.4",
+		"constantcontact/constantcontact": "1.3.*",
 		"aweber/aweber": "1.1.18"
 	}
 }

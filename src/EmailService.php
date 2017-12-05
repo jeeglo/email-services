@@ -84,5 +84,23 @@ class EmailService {
     {
 		return $this->driver->addContact($data);
     }
+
+    /**
+     * Connect Email service
+     * @param [type] $data [description]
+     */
+    public function connect()
+    {
+        return $this->driver->connect();
+    }
+
+    /**
+     * Get Connect Data from Email service
+     * @param [type] $data [description]
+     */
+    public function getConnectData()
+    {
+        return $this->driver->getConnectData();
+    }
  
 }
