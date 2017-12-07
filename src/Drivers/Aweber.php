@@ -9,14 +9,18 @@ class Aweber
     protected $consumer_secret_key;
     protected $access_token;
     protected $access_token_secret;
+    protected $request_token_secret;
     protected $aweber;
 
     public function __construct($credentials) {
         
         // @todo Throw exception if API key is not available
-        $this->api_key = $credentials['api_key'];
-        $this->access_token = $credentials['access_token'];
-        $this->aweber = new AWeberAPI($consumerKey, $consumerSecret);
+        $this->redirect_url = $credentials['redirect_url'];
+        $this->consumer_key = $credentials['consumer_key'];
+        $this->consumer_secret_key = $credentials['consumer_secret_key'];
+        $this->access_token = (isset($credentials['access_token']) ? $credentials['access_token'] : null) ;
+        $this->access_token_secret = (isset($credentials['access_token_secret']) ? $credentials['access_token_secret'] : null);
+        $this->aweber = new AWeberAPI($this->consumer_key, $this->consumer_secret_key);
 
     }   
 
@@ -63,6 +67,39 @@ class Aweber
             throw new \Exception($e->getMessage(), 1);
             
         }
+    }
+
+    /**
+     * Call to Email service and get OAuth Url
+     * @return [array]
+     */
+    public function connect()
+    {
+        // Make Call to Aweber and return OAuth Url
+        if (empty($_GET['oauth_token'])) {
+            $callbackUrl = $this->redirect_url;
+            list($requestToken, $requestTokenSecret) = $this->aweber->getRequestToken($callbackUrl);
+            $this->request_token_secret = $requestTokenSecret;
+            setcookie('requestTokenSecret', $requestTokenSecret);
+            return ['url' => $this->aweber->getAuthorizeUrl()] ;
+        }
+    }
+
+    /**
+     * Get response from Email Service after user Allow access to our application
+     * @return [array]
+     */
+    public function getConnectData()
+    {
+        // Get Connect Data from Aweber
+        $this->aweber->user->tokenSecret = $this->request_token_secret;
+        $this->aweber->user->requestToken = $_GET['oauth_token'];
+        $this->aweber->user->verifier = $_GET['oauth_verifier'];
+        
+        list($accessToken, $accessTokenSecret) = $this->aweber->getAccessToken();
+        
+        // Return Access Token and Access Token Secret
+        return ['access_token' => $accessToken, 'access_token_secret' => $accessTokenSecret];
     }
 
     /**
