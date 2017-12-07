@@ -1,7 +1,7 @@
 <?php
 
 namespace Jeeglo\EmailService\Drivers;
-use AweberApi;
+use AWeberAPI;
 
 class Aweber 
 {
