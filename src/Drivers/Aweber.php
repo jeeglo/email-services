@@ -2,6 +2,7 @@
 
 namespace Jeeglo\EmailService\Drivers;
 use AWeberAPI;
+session_start();
 
 class Aweber 
 {
@@ -9,7 +10,6 @@ class Aweber
     protected $consumer_secret_key;
     protected $access_token;
     protected $access_token_secret;
-    protected $request_token_secret;
     protected $aweber;
 
     public function __construct($credentials) {
@@ -79,10 +79,10 @@ class Aweber
         if (empty($_GET['oauth_token'])) {
             $callbackUrl = $this->redirect_url;
             list($requestToken, $requestTokenSecret) = $this->aweber->getRequestToken($callbackUrl);
-            $this->request_token_secret = $requestTokenSecret;
-            setcookie('requestTokenSecret', $requestTokenSecret);
+            $_SESSION['requestTokenSecret'] = $requestTokenSecret; 
             return ['url' => $this->aweber->getAuthorizeUrl()] ;
         }
+
     }
 
     /**
@@ -92,7 +92,7 @@ class Aweber
     public function getConnectData()
     {
         // Get Connect Data from Aweber
-        $this->aweber->user->tokenSecret = $this->request_token_secret;
+        $this->aweber->user->tokenSecret = $_SESSION['requestTokenSecret'];
         $this->aweber->user->requestToken = $_GET['oauth_token'];
         $this->aweber->user->verifier = $_GET['oauth_verifier'];
         
