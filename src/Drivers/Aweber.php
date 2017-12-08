@@ -15,7 +15,7 @@ class Aweber
     public function __construct($credentials) {
         
         // @todo Throw exception if API key is not available
-        $this->redirect_url = $credentials['redirect_url'];
+        $this->redirect_url = (isset($credentials['redirect_url']) ? $credentials['redirect_url'] : 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
         $this->consumer_key = $credentials['consumer_key'];
         $this->consumer_secret_key = $credentials['consumer_secret_key'];
         $this->access_token = (isset($credentials['access_token']) ? $credentials['access_token'] : null) ;
