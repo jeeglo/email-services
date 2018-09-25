@@ -45,6 +45,10 @@ class Mailchimp
             $result = $this->mailchimp->post("lists/$list_id/members", [
                 'email_address' => $data['email'],
                 'status'        => 'subscribed',
+                'merge_fields' => [
+                    'FNAME' => isset($data['first_name']) ? $data['first_name'] : '',
+                    'LNAME' => isset($data['last_name']) ? $data['last_name'] : ''
+                ]
             ]);
 
             // Check result from API and return response accordingly
