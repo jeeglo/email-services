@@ -19,14 +19,10 @@ class Kyvio
     public function getLists()
     {
         $api_key = $this->api_key;
+        $link="https://kyvio.com/api/v1/mailing-list?api_key=";
         try {
-            $curl = curl_init();
-            curl_setopt_array($curl, array(
-                CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_URL => 'https://kyvio.com/api/v1/mailing-list?api_key='.$api_key,
-            ));
-            $resp = curl_exec($curl);
-            curl_close($curl);
+            $contact = null;
+            $resp = $this->curl($api_key,$contact,$link);
             $lists = [];
             $lists_data = json_decode($resp, true);
             $error = (isset($lists_data['success']) && $lists_data['success'] == true ? 0 : 1);
@@ -52,11 +48,12 @@ class Kyvio
 
     // /**
     //  * [addContact Add contact to list through API]
-    //  * @return string [return success or fail]
+    //  * @return array [return success or fail]
     //  */
     public function addContact($data)
     {
-        $api_key =$this->api_key;
+        $api_key = $this->api_key;
+        $link="https://kyvio.com/api/v1/subscribers/create";
 		try {
             // set param fields
 			$contact = array(
@@ -65,18 +62,8 @@ class Kyvio
 			    'email' => $data['email'],
 			    'name' => $data['first_name'].' '.$data['last_name']
             );
-			// Curl Post Query
-			$contact_sync = curl_init('https://kyvio.com/api/v1/subscribers/create');
-
-			curl_setopt($contact_sync, CURLOPT_HTTPHEADER, array(                                                                          
-			    'Content-Type: application/json',                                                                                
-			));
-			curl_setopt($contact_sync, CURLOPT_POSTFIELDS, json_encode($contact));
-
-			// execute Curl
-			$response = curl_exec($contact_sync);
-			// close the connection of Curl
-			curl_close($contact_sync);
+            $response= $this->curl($api_key,$contact,$link);
+            
             return $this->successResponse();
             
         } catch (Exception $e) {
@@ -109,5 +96,32 @@ class Kyvio
     private function failedResponse()
     {
         throw new \Exception('Something went wrong!');
+    }
+
+
+    private function curl($api_key,$contact,$link)
+    {
+        $curl = curl_init($link);
+        if($contact==null)
+        {
+            curl_setopt_array($curl, array(
+                CURLOPT_RETURNTRANSFER => 1,
+                CURLOPT_URL => $link.$api_key,
+            ));
+        }
+        else
+			{   
+                curl_setopt($curl, CURLOPT_HTTPHEADER, array(                                                                          
+			    'Content-Type: application/json',                                                                                
+                ));
+                curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($contact));
+            }
+
+			// execute Curl
+			$response = curl_exec($curl);
+			// close the connection of Curl
+            curl_close($curl);
+            
+            return $response;
     }
 }
