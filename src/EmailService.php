@@ -12,6 +12,7 @@ use Jeeglo\EmailService\Drivers\ConvertKit as ConvertKit;
 use Jeeglo\EmailService\Drivers\Drip as Drip;
 use Jeeglo\EmailService\Drivers\ConstantContact as ConstantContact;
 use Jeeglo\EmailService\Drivers\Aweber as Aweber;
+use Jeeglo\EmailService\Drivers\Kyvio as Kyvio;
 
 class EmailService {
 
@@ -59,6 +60,10 @@ class EmailService {
 
             case 'drip':
                 $this->driver = new Drip($credentials);
+                break;
+
+            case 'kyvio':
+                $this->driver = new Kyvio($credentials);
     			break;
     		
     		default:
