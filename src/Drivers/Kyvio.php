@@ -5,10 +5,12 @@ namespace Jeeglo\EmailService\Drivers;
 class Kyvio 
 {
     protected $api_key;
+    protected $api_url;
 
     public function __construct($credentials) {
         // @todo Throw exception if API key is not available
         $this->api_key = $credentials['api_key'];
+        $this->api_url = "https://kyvio.com/api/v1/";
         
     }     
 
@@ -19,7 +21,7 @@ class Kyvio
     public function getLists()
     {
         $api_key = $this->api_key;
-        $link="https://kyvio.com/api/v1/mailing-list?api_key=";
+        $link="mailing-list";
         try {
             $contact = null;
             $resp = $this->curl($api_key,$contact,$link);
@@ -46,14 +48,14 @@ class Kyvio
         
     }
 
-    // /**
-    //  * [addContact Add contact to list through API]
-    //  * @return array [return success or fail]
-    //  */
+    /**
+    * [addContact Add contact to list through API]
+    * @return array [return success or fail]
+    */
     public function addContact($data)
     {
         $api_key = $this->api_key;
-        $link="https://kyvio.com/api/v1/subscribers/create";
+        $link="subscribers/create";
 		try {
             // set param fields
 			$contact = array(
@@ -62,7 +64,7 @@ class Kyvio
 			    'email' => $data['email'],
 			    'name' => $data['first_name'].' '.$data['last_name']
             );
-            $response= $this->curl($api_key,$contact,$link);
+            $response = $this->curl($api_key,$contact,$link);
             
             return $this->successResponse();
             
@@ -99,7 +101,7 @@ class Kyvio
     }
 
 
-    private function curl($api_key,$contact,$link)
+    private function curl($api_method, $data = [], $method = 'GET', $headers = [])
     {
         $curl = curl_init($link);
         if($contact==null)
