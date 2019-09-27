@@ -5,13 +5,11 @@ namespace Jeeglo\EmailService\Drivers;
 class Kyvio 
 {
     protected $api_key;
-    protected $api_url;
 
     public function __construct($credentials) {
         // @todo Throw exception if API key is not available
         $this->api_key = $credentials['api_key'];
         $this->api_url = "https://kyvio.com/api/v1/";
-        
     }     
 
     /**
@@ -20,11 +18,8 @@ class Kyvio
      */
     public function getLists()
     {
-        $api_key = $this->api_key;
-        $link="mailing-list";
         try {
-            $contact = null;
-            $resp = $this->curl($api_key,$contact,$link);
+            $resp = $this->curl('mailing-list',[],'GET');
             $lists = [];
             $lists_data = json_decode($resp, true);
             $error = (isset($lists_data['success']) && $lists_data['success'] == true ? 0 : 1);
@@ -48,24 +43,23 @@ class Kyvio
         
     }
 
-    /**
-    * [addContact Add contact to list through API]
-    * @return array [return success or fail]
-    */
+     /**
+      * [addContact Add contact to list through API]
+      * @return array [return success or fail]
+      */
     public function addContact($data)
     {
-        $api_key = $this->api_key;
-        $link="subscribers/create";
-		try {
+        try {
             // set param fields
 			$contact = array(
-			    'api_key' => $api_key,
+			    'api_key' => $this->api_key,
 			    'list_id' => $data['list_id'],
 			    'email' => $data['email'],
 			    'name' => $data['first_name'].' '.$data['last_name']
             );
-            $response = $this->curl($api_key,$contact,$link);
-            
+
+            // send curl request
+            $response =  $this->curl('subscribers/create',$contact,"POST");
             return $this->successResponse();
             
         } catch (Exception $e) {
@@ -100,30 +94,37 @@ class Kyvio
         throw new \Exception('Something went wrong!');
     }
 
-
+    /**
+     * Request Method
+     * @return array for getList
+     * @return array for addContact
+     */
     private function curl($api_method, $data = [], $method = 'GET', $headers = [])
     {
-        $curl = curl_init($link);
-        if($contact==null)
+        $url = $this->api_url.$api_method;
+        $curl = curl_init($url);
+        if($method == 'GET')
         {
             curl_setopt_array($curl, array(
                 CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_URL => $link.$api_key,
+                CURLOPT_URL => $url."?api_key=".$this->api_key,
             ));
         }
-        else
-			{   
-                curl_setopt($curl, CURLOPT_HTTPHEADER, array(                                                                          
-			    'Content-Type: application/json',                                                                                
-                ));
-                curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($contact));
-            }
 
-			// execute Curl
-			$response = curl_exec($curl);
-			// close the connection of Curl
-            curl_close($curl);
+        if($method == 'POST')
+		{  
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array(                                                                          
+			    'Content-Type: application/json',                                                                                
+            ));
+
+            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
+        }
+
+        // execute Curl
+        $response = curl_exec($curl);
+        // close the connection of Curl
+        curl_close($curl);
             
-            return $response;
+        return $response;  
     }
 }
