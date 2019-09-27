@@ -19,12 +19,11 @@ class Kyvio
     public function getLists()
     {
         $api_key = $this->api_key;
-        $api_url = $this->api_url;
-        $link = $api_url.'mailing-list?api_key='.$api_key;
+        $api_method = 'mailing-list';
         $method = "GET";
-        
+
         try {
-            $resp = $this->curl($link,[],$method);
+            $resp = $this->curl($api_method,[],$method);
             $lists = [];
             $lists_data = json_decode($resp, true);
             $error = (isset($lists_data['success']) && $lists_data['success'] == true ? 0 : 1);
@@ -55,8 +54,7 @@ class Kyvio
     public function addContact($data)
     {
         $api_key =$this->api_key;
-        $api_url = $this->api_url;
-        $link = $api_url.'subscribers/create';
+        $api_method = 'subscribers/create';
         $method = "POST";
 
         try {
@@ -69,7 +67,7 @@ class Kyvio
             );
 
             // send curl request
-            $response =  $this->curl($link,$contact,$method);
+            $response =  $this->curl($api_method,$contact,$method);
             return $this->successResponse();
             
         } catch (Exception $e) {
@@ -109,20 +107,21 @@ class Kyvio
      * @return array for getList
      * @return array for addContact
      */
-    private function curl($api_url, $data = [], $method = 'GET', $headers = [])
+    private function curl($api_method, $data = [], $method = 'GET', $headers = [])
     {
-        $curl = curl_init($api_url);
-        
+        $url = $this->api_url.$api_method;
+        $curl = curl_init($url);
         if($method == 'GET')
         {
+            $url = $this->api_url.$api_method."?api_key=".$this->api_key;
             curl_setopt_array($curl, array(
                 CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_URL => $api_url,
+                CURLOPT_URL => $url,
             ));
         }
 
         if($method == 'POST')
-		{   
+		{  
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(                                                                          
 			    'Content-Type: application/json',                                                                                
             ));
