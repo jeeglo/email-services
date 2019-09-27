@@ -5,13 +5,11 @@ namespace Jeeglo\EmailService\Drivers;
 class Kyvio 
 {
     protected $api_key;
-    protected $api_url;
 
     public function __construct($credentials) {
         // @todo Throw exception if API key is not available
         $this->api_key = $credentials['api_key'];
         $this->api_url = "https://kyvio.com/api/v1/";
-        
     }     
 
     /**
@@ -21,10 +19,12 @@ class Kyvio
     public function getLists()
     {
         $api_key = $this->api_key;
-        $link="mailing-list";
+        $api_url = $this->api_url;
+        $link = $api_url.'mailing-list?api_key='.$api_key;
+        $method = "GET";
+        
         try {
-            $contact = null;
-            $resp = $this->curl($api_key,$contact,$link);
+            $resp = $this->curl($link,[],$method);
             $lists = [];
             $lists_data = json_decode($resp, true);
             $error = (isset($lists_data['success']) && $lists_data['success'] == true ? 0 : 1);
@@ -48,15 +48,18 @@ class Kyvio
         
     }
 
-    /**
-    * [addContact Add contact to list through API]
-    * @return array [return success or fail]
-    */
+     /**
+      * [addContact Add contact to list through API]
+      * @return array [return success or fail]
+      */
     public function addContact($data)
     {
-        $api_key = $this->api_key;
-        $link="subscribers/create";
-		try {
+        $api_key =$this->api_key;
+        $api_url = $this->api_url;
+        $link = $api_url.'subscribers/create';
+        $method = "POST";
+
+        try {
             // set param fields
 			$contact = array(
 			    'api_key' => $api_key,
@@ -64,8 +67,9 @@ class Kyvio
 			    'email' => $data['email'],
 			    'name' => $data['first_name'].' '.$data['last_name']
             );
-            $response = $this->curl($api_key,$contact,$link);
-            
+
+            // send curl request
+            $response =  $this->curl($link,$contact,$method);
             return $this->successResponse();
             
         } catch (Exception $e) {
@@ -100,30 +104,37 @@ class Kyvio
         throw new \Exception('Something went wrong!');
     }
 
-
-    private function curl($api_method, $data = [], $method = 'GET', $headers = [])
+    /**
+     * Request Method
+     * @return array for getList
+     * @return array for addContact
+     */
+    private function curl($api_url, $data = [], $method = 'GET', $headers = [])
     {
-        $curl = curl_init($link);
-        if($contact==null)
+        $curl = curl_init($api_url);
+        
+        if($method == 'GET')
         {
             curl_setopt_array($curl, array(
                 CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_URL => $link.$api_key,
+                CURLOPT_URL => $api_url,
             ));
         }
-        else
-			{   
-                curl_setopt($curl, CURLOPT_HTTPHEADER, array(                                                                          
-			    'Content-Type: application/json',                                                                                
-                ));
-                curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($contact));
-            }
 
-			// execute Curl
-			$response = curl_exec($curl);
-			// close the connection of Curl
-            curl_close($curl);
+        if($method == 'POST')
+		{   
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array(                                                                          
+			    'Content-Type: application/json',                                                                                
+            ));
+
+            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
+        }
+
+        // execute Curl
+        $response = curl_exec($curl);
+        // close the connection of Curl
+        curl_close($curl);
             
-            return $response;
+        return $response;  
     }
 }
