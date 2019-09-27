@@ -18,12 +18,8 @@ class Kyvio
      */
     public function getLists()
     {
-        $api_key = $this->api_key;
-        $api_method = 'mailing-list';
-        $method = "GET";
-
         try {
-            $resp = $this->curl($api_method,[],$method);
+            $resp = $this->curl('mailing-list',[],'GET');
             $lists = [];
             $lists_data = json_decode($resp, true);
             $error = (isset($lists_data['success']) && $lists_data['success'] == true ? 0 : 1);
@@ -53,21 +49,17 @@ class Kyvio
       */
     public function addContact($data)
     {
-        $api_key =$this->api_key;
-        $api_method = 'subscribers/create';
-        $method = "POST";
-
         try {
             // set param fields
 			$contact = array(
-			    'api_key' => $api_key,
+			    'api_key' => $this->api_key,
 			    'list_id' => $data['list_id'],
 			    'email' => $data['email'],
 			    'name' => $data['first_name'].' '.$data['last_name']
             );
 
             // send curl request
-            $response =  $this->curl($api_method,$contact,$method);
+            $response =  $this->curl('subscribers/create',$contact,"POST");
             return $this->successResponse();
             
         } catch (Exception $e) {
@@ -113,10 +105,9 @@ class Kyvio
         $curl = curl_init($url);
         if($method == 'GET')
         {
-            $url = $this->api_url.$api_method."?api_key=".$this->api_key;
             curl_setopt_array($curl, array(
                 CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_URL => $url,
+                CURLOPT_URL => $url."?api_key=".$this->api_key,
             ));
         }
 
