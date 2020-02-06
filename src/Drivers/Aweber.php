@@ -42,7 +42,7 @@ class Aweber
      * [addContact Add contact to list through API]
      * @return string [return success or fail]
      */
-    public function addContact($data)
+    public function addContact($data, $remove_tags = [], $add_tags = [])
     {   
         // @todo throw exception if email field is empty or list id or not available
         try {

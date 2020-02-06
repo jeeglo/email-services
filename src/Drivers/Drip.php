@@ -26,9 +26,24 @@ class Drip
     public function getLists()
     {
         try {
-            $lists = $this->drip->get('campaigns');
+             $lists['lists'] = $this->drip->get('campaigns')->campaigns;
 
             return $this->response($lists);
+        } catch (Exception $e) {
+           throw new \Exception($e->getMessage());
+        }
+    }
+
+    /**
+     * [getTags Fetch Tags through API]
+     * @return array
+     */
+    public function getTags()
+    {
+        try {
+             $tags['tags'] = $this->drip->get('tags')->tags;
+            
+             return $this->response($tags);
         } catch (Exception $e) {
            throw new \Exception($e->getMessage());
         }
@@ -38,26 +53,28 @@ class Drip
      * [addContact Add contact to list through API]
      * @return string [return success or fail]
      */
-    public function addContact($data)
+    public function addContact($data, $removeTags, $addTags)
     {   
         // @todo throw exception if email field is empty or list id or not available
         try {
+             
+            $list_id = $data['list_id']; 
             
-            $list_id = $data['list_id'];    
-
-            $data = new Dataset('subscribers', [
-                'email' => $data['email'],
-                'custom_fields' => [
-                    'first_name' => (isset($data['first_name']) ? $data['first_name'] : null),
-                    'last_name' => (isset($data['last_name']) ? $data['last_name'] : null),
-                ],
+            $data_subscriber = new Dataset('subscribers', [
+                    'email' => $data['email'],
+                    'custom_fields' => [
+                        'first_name' => (isset($data['first_name']) ? $data['first_name'] : null),
+                        'last_name' => (isset($data['last_name']) ? $data['last_name'] : null),
+                    ],
             ]);
-            
-            $response = $this->drip->post('campaigns/'.$list_id.'/subscribers', $data);
+                
+            $response = $this->drip->post('campaigns/'.$list_id.'/subscribers', $data_subscriber);
 
             if(isset($response->errors)) {
                 throw new \Exception($response->errors[0]['message'], 1);
             } else {
+                $this->sync($data,$removeTags,$addTags);
+
                 return $this->successResponse();
             }    
 
@@ -71,25 +88,69 @@ class Drip
      * [response description]
      * @return  array [return response as key value]
      */
-    private function response($lists)
+    private function response($data)
     {
         $response = [];
 
         try {
-            if(!empty($lists)) {
-
-                foreach ($lists->campaigns as $list) {
+            if(!empty($data['lists'])) {
+                // return $data['lists'];
+                foreach ($data['lists'] as $list) {
                     $response[] = array(
                         'name' => $list['name'],
                         'id' => $list['id']
                     );
                 }
             }
+
+            if(!empty($data['tags'])) {
+
+                foreach ($data['tags'] as $tag) {
+                    $response[] = array(
+                        'name' => $tag,
+                    );
+                }
+                    
+            }
         } catch (Exception $e) {
             throw new \Exception($e->getMessage());
         }
 
         return $response;
+    }
+
+    private function sync($data, $removeTags, $addTags){
+
+        try {
+
+            // Remove Tags
+            if(is_array($removeTags) && count($removeTags) > 0) {
+
+                foreach( $removeTags as $tag) {
+
+                    $response = $this->drip->delete("subscribers/{$data['email']}/tags/{$tag}");
+                }
+            }
+
+            // Add Tags
+            if(is_array($addTags) && count($addTags) > 0) {
+                
+                foreach($addTags as $tag) {
+                    
+                    $data_tag = new Dataset('tags', [
+                        'email' => $data['email'], 
+                        'tag' => $tag 
+                    ]);
+
+                    $response = $this->drip->post('tags', $data_tag);
+
+                }
+                
+            }
+
+        } catch (Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
     }
 
     /**
