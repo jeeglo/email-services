@@ -11,7 +11,7 @@ class ConvertKit
         
         // @todo Throw exception if API key is not available
         $this->api_key = $credentials['api_key'];
-        $this->api_secret = $credentials['api_secret'];
+        $this->api_secret = (isset($credentials['api_secret']) ? $credentials['api_secret'] : null);
         
     }   
 
