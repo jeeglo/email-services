@@ -82,12 +82,25 @@ class EmailService {
     }
 
     /**
+     * [getTags for current driver]
+     * @param array $data for mailchimp driver but null for other drivers
+     * @return [array] [key value]
+     */
+    public function getTags($data = null)
+    {
+        if(!empty($data)){
+            return $this->driver->getTags($data);
+        }
+        return $this->driver->getTags();
+    }
+
+    /**
      * [addContact for adding user to current driver]
      * @param [type] $data [description]
      */
-    public function addContact($data)
+    public function addContact($data, $remove_tags = [], $add_tags = [])
     {
-		return $this->driver->addContact($data);
+		return $this->driver->addContact($data, $remove_tags, $add_tags);
     }
 
     /**
