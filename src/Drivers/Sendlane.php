@@ -25,7 +25,7 @@ class Sendlane
     {
         try {
             
-            $lists = $this->apiCall('lists', [ 'limit' => 9 ]);
+            $lists = $this->apiCall('lists', [ 'limit' => 1000 ]);
 
             return $this->response($lists, 'list');
         } catch (Exception $e) {
