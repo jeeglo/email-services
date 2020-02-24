@@ -13,6 +13,7 @@ use Jeeglo\EmailService\Drivers\Drip as Drip;
 use Jeeglo\EmailService\Drivers\ConstantContact as ConstantContact;
 use Jeeglo\EmailService\Drivers\Aweber as Aweber;
 use Jeeglo\EmailService\Drivers\Kyvio as Kyvio;
+use Jeeglo\EmailService\Drivers\Ontraport as Ontraport;
 
 class EmailService {
 
@@ -65,6 +66,10 @@ class EmailService {
             case 'kyvio':
                 $this->driver = new Kyvio($credentials);
     			break;
+                
+            case 'Ontraport':
+                $this->driver = new Kyvio($credentials);
+                break;
     		
     		default:
     			return 'Not Found';
