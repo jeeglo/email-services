@@ -37,7 +37,7 @@ class Ontraport
 
             return $this->response($tags);
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
 
@@ -81,7 +81,7 @@ class Ontraport
             }             
         }    
            
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
          // Catch any exceptions
             throw new \Exception($e->getMessage(), 1);
             
@@ -120,7 +120,7 @@ class Ontraport
                 $this->ontrport->object()->addTag($params);
             }
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }
@@ -142,7 +142,7 @@ class Ontraport
                     ];
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
 
