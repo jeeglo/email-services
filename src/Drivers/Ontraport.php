@@ -17,7 +17,7 @@ class Ontraport
         // @todo Throw exception if API key is not available
         $this->app_id = $credentials['app_id'];
         $this->api_key = $credentials['api_key'];
-        $this->ontrport = new OntraportAPI($this->app_id,$this->api_key);
+        $this->ontraport = new OntraportAPI($this->app_id,$this->api_key);
 
     }   
 
@@ -32,7 +32,7 @@ class Ontraport
                 "objectID"   => ObjectType::TAG, // Object type ID: 14
             );
 
-            $response = json_decode($this->ontrport->object()->retrieveMultiple($requestParams));
+            $response = json_decode($this->ontraport->object()->retrieveMultiple($requestParams));
             $tags = $response->data;
 
             return $this->response($tags);
@@ -59,7 +59,7 @@ class Ontraport
              "email"     => $data['email']
         );
 
-        $response = json_decode($this->ontrport->object()->saveOrUpdate($requestParams));
+        $response = json_decode($this->ontraport->object()->saveOrUpdate($requestParams));
 
         if ($response != '') {
    
@@ -105,7 +105,7 @@ class Ontraport
                     "remove_list" => implode(',', $removeTags)
                 ];
 
-                $this->ontrport->object()->removeTag($params);                
+                $this->ontraport->object()->removeTag($params);                
             }
 
              //Add tags
@@ -117,7 +117,7 @@ class Ontraport
                     "add_list" => implode(',', $addTags)
                 ];
 
-                $this->ontrport->object()->addTag($params);
+                $this->ontraport->object()->addTag($params);
             }
 
         } catch (\Exception $e) {
