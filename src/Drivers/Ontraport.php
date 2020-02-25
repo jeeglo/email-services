@@ -2,7 +2,6 @@
 
 namespace Jeeglo\EmailService\Drivers;
 
-use mysql_xdevapi\Exception;
 use OntraportAPI\Ontraport as OntraportAPI;
 use OntraportAPI\ObjectType as ObjectType;
 
@@ -10,7 +9,7 @@ class Ontraport
 {
     protected $app_id;
     protected $api_key;
-    protected $apiBasePath = 'https://api.ontraport.com/1';
+    protected $ontraport;
 
 
     public function __construct($credentials) {
@@ -48,32 +47,42 @@ class Ontraport
      * [addContact Add contact to list through API]
      * @return string [return success or fail]
      */
-    public function addContact($data, $removeTags, $addTags)
+    public function addContact($data, $addTags = [] ,$removeTags = [])
     {   
 
-        try {
-            
-            // set param fields
-            $requestParams = [
-                "firstname" => (isset($data['first_name']) ? $data['first_name'] : null),
-                "lastname"  => (isset($data['last_name']) ? $data['last_name'] : null),
-                "email"     => $data['email']
-            ];
+    try {
+        
+        $requestParams = array(
+             "objectID"  => ObjectType::CONTACT, // Object type ID: 
+             "firstname" => (isset($data['first_name']) ? $data['first_name'] : null),
+             "lastname"  => (isset($data['last_name']) ? $data['last_name'] : null),
+             "email"     => $data['email']
+        );
 
-            $response = json_decode($this->ontrport->contact()->deleteSingle($requestParams));
+        $response = json_decode($this->ontrport->object()->saveOrUpdate($requestParams));
 
-            if($response->data->id) {
+        if ($response != '') {
+   
+            if(isset($response->data->id))
+            {   
                 $data['contact_id'] = $response->data->id;
-
+                
                 $this->sync($data,$removeTags,$addTags);
 
-                return $this->successResponse($response);
+                return $this->successResponse();    
 
-            }else{
-                return $this->failedResponse();
-            }
+            }elseif (isset($response->data->attrs->id)) {
+               
+                $data['contact_id'] = $response->data->attrs->id;
+                
+                $this->sync($data,$removeTags,$addTags);
 
-        } catch (Exception $e) { // Catch any exceptions
+                return $this->successResponse();    
+            }             
+        }    
+           
+        } catch (Exception $e) {
+         // Catch any exceptions
             throw new \Exception($e->getMessage(), 1);
             
         }
@@ -83,21 +92,9 @@ class Ontraport
      * [sync add and remove tags]
      * @return [array] [Success true]
      */
-    private function sync($data, $removeTags, $addTags) {
+    private function sync($data, $addTags,$removeTags) {
         
         try {
-
-            //Add tags
-            if(is_array($addTags) && count($addTags) > 0) {
-
-                $params = [
-                    "objectID" => ObjectType::CONTACT,
-                    "ids"      => $data['contact_id'],
-                    "add_list" => implode(',', $addTags)
-                ];
-
-                $this->ontrport->object()->addTag($params);
-            }
 
             // Remove tags
             if(is_array($removeTags) && count($removeTags) > 0 ) {
@@ -108,7 +105,19 @@ class Ontraport
                     "remove_list" => implode(',', $removeTags)
                 ];
 
-                $this->ontrport->object()->removeTag($params);
+                $this->ontrport->object()->removeTag($params);                
+            }
+
+             //Add tags
+            if(is_array($addTags) && count($addTags) > 0) {
+
+                $params = [
+                    "objectID" => ObjectType::CONTACT,
+                    "ids"      => $data['contact_id'],
+                    "add_list" => implode(',', $addTags)
+                ];
+
+                $this->ontrport->object()->addTag($params);
             }
 
         } catch (Exception $e) {
@@ -144,9 +153,9 @@ class Ontraport
      * [successResponse description]
      * @return [array] [Success true]
      */
-    private function successResponse($response)
+    private function successResponse()
     {
-        return print_r($response);
+        return ['success' => 1];
     }
 
     /**
@@ -155,6 +164,6 @@ class Ontraport
      */
     private function failedResponse()
     {
-        throw new \Exception('Something went wrong!');
+        throw new \Exception("Something Wrong !");
     }
 }

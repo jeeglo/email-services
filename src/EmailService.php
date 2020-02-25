@@ -67,8 +67,8 @@ class EmailService {
                 $this->driver = new Kyvio($credentials);
     			break;
                 
-            case 'Ontraport':
-                $this->driver = new Kyvio($credentials);
+            case 'ontraport':
+                $this->driver = new Ontraport($credentials);
                 break;
     		
     		default:
