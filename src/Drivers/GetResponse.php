@@ -48,7 +48,7 @@ class GetResponse
                 'campaign'          => array('campaignId' => $list_id)
             ));
 
-            if(isset($response->httpStatus) && $response->httpStatus == 400 || $response->httpStatus == 409) {
+            if(isset($response->httpStatus) && ($response->httpStatus == 400 || $response->httpStatus == 409)) {
                 throw new \Exception($response->message, 1);
             } else {
                 return $this->successResponse();
