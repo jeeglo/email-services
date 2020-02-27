@@ -47,42 +47,29 @@ class Ontraport
      */
     public function addContact($data, $addTags = [] ,$removeTags = [])
     {   
-        //add contacts perams
-    try {
+        // Add contacts params
+        try {
         
-        $requestParams = array(
-             "objectID"  => ObjectType::CONTACT, // Object type ID: 
-             "firstname" => (isset($data['first_name']) ? $data['first_name'] : null),
-             "lastname"  => (isset($data['last_name']) ? $data['last_name'] : null),
-             "email"     => $data['email']
-        );
+            $requestParams = [
+                 "objectID"  => ObjectType::CONTACT, // Object type ID: 
+                 "firstname" => (isset($data['first_name']) ? $data['first_name'] : null),
+                 "lastname"  => (isset($data['last_name']) ? $data['last_name'] : null),
+                 "email"     => $data['email']
+            ];
 
-        $response = json_decode($this->ontraport->object()->saveOrUpdate($requestParams));
+            $response = json_decode($this->ontraport->object()->saveOrUpdate($requestParams));
 
-        if ($response != '') {
-   
-            if(isset($response->data->id))
-            {   
-                $data['contact_id'] = $response->data->id;
+            if (!empty($response)) {
                 
-                $this->sync($data,$removeTags,$addTags);
+                $data['contact_id'] = isset($response->data->id) ? $response->data->id : (isset($response->data->attrs->id) ? $response->data->attrs->id : null);
 
-                return $this->successResponse();    
+                $this->sync($data, $removeTags, $addTags);
 
-            } elseif (isset($response->data->attrs->id)) {
-               
-                $data['contact_id'] = $response->data->attrs->id;
-                
-                $this->sync($data,$removeTags,$addTags);
-
-                return $this->successResponse();    
-            }             
-        }    
+                return $this->successResponse();
+            }    
            
         } catch (\Exception $e) {
-         // Catch any exceptions
             throw new \Exception($e->getMessage(), 1);
-            
         }
     }
 
@@ -106,7 +93,8 @@ class Ontraport
                 $this->ontraport->object()->removeTag($params);                
             }
 
-             //Add tags
+             //Add 
+
             if(is_array($addTags) && count($addTags) > 0) {
 
                 $params = [
