@@ -11,9 +11,8 @@ class Ontraport
     protected $api_key;
     protected $ontraport;
 
-
     public function __construct($credentials) {
-        
+
         // @todo Throw exception if API key is not available
         $this->app_id = $credentials['app_id'];
         $this->api_key = $credentials['api_key'];
@@ -26,7 +25,6 @@ class Ontraport
      * @return array
      */
     public function getTags() {
-
         //fetch tags
         try {
 
@@ -36,13 +34,11 @@ class Ontraport
 
             $response = json_decode($this->ontraport->object()->retrieveMultiple($requestParams));
             $tags = $response->data;
-
             return $this->response($tags);
 
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
-
     }
 
     /**
@@ -51,8 +47,7 @@ class Ontraport
      */
     public function addContact($data, $addTags = [] ,$removeTags = [])
     {   
-
-        //add contact parameters
+        //add contacts perams
     try {
         
         $requestParams = array(
@@ -61,10 +56,8 @@ class Ontraport
              "lastname"  => (isset($data['last_name']) ? $data['last_name'] : null),
              "email"     => $data['email']
         );
-        //add contact request
-        $response = json_decode($this->ontraport->object()->saveOrUpdate($requestParams));
 
-        //response condition
+        $response = json_decode($this->ontraport->object()->saveOrUpdate($requestParams));
 
         if ($response != '') {
    
@@ -76,7 +69,7 @@ class Ontraport
 
                 return $this->successResponse();    
 
-            }elseif (isset($response->data->attrs->id)) {
+            } elseif (isset($response->data->attrs->id)) {
                
                 $data['contact_id'] = $response->data->attrs->id;
                 
@@ -98,8 +91,6 @@ class Ontraport
      * @return [array] [Success true]
      */
     private function sync($data, $addTags,$removeTags) {
-        
-        //sync tags
         
         try {
 
@@ -162,7 +153,6 @@ class Ontraport
      */
     private function successResponse()
     {
-        //success response
         return ['success' => 1];
     }
 
@@ -172,7 +162,6 @@ class Ontraport
      */
     private function failedResponse()
     {
-        //failed response
-        throw new \Exception("Something Wrong !");
+        throw new \Exception("Something went wrong !");
     }
 }
