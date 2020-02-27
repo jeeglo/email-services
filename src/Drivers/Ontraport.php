@@ -26,6 +26,8 @@ class Ontraport
      * @return array
      */
     public function getTags() {
+
+        //fetch tags
         try {
 
             $requestParams = array(
@@ -50,6 +52,7 @@ class Ontraport
     public function addContact($data, $addTags = [] ,$removeTags = [])
     {   
 
+        //add contact parameters
     try {
         
         $requestParams = array(
@@ -58,8 +61,10 @@ class Ontraport
              "lastname"  => (isset($data['last_name']) ? $data['last_name'] : null),
              "email"     => $data['email']
         );
-
+        //add contact request
         $response = json_decode($this->ontraport->object()->saveOrUpdate($requestParams));
+
+        //response condition
 
         if ($response != '') {
    
@@ -93,6 +98,8 @@ class Ontraport
      * @return [array] [Success true]
      */
     private function sync($data, $addTags,$removeTags) {
+        
+        //sync tags
         
         try {
 
@@ -155,6 +162,7 @@ class Ontraport
      */
     private function successResponse()
     {
+        //success response
         return ['success' => 1];
     }
 
@@ -164,6 +172,7 @@ class Ontraport
      */
     private function failedResponse()
     {
+        //failed response
         throw new \Exception("Something Wrong !");
     }
 }
