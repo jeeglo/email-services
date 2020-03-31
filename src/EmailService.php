@@ -14,7 +14,6 @@ use Jeeglo\EmailService\Drivers\ConstantContact as ConstantContact;
 use Jeeglo\EmailService\Drivers\Aweber as Aweber;
 use Jeeglo\EmailService\Drivers\Kyvio as Kyvio;
 use Jeeglo\EmailService\Drivers\Ontraport as Ontraport;
-use Jeeglo\EmailService\Drivers\EmailOctopus as EmailOctopus;
 
 class EmailService {
 
@@ -67,14 +66,10 @@ class EmailService {
             case 'kyvio':
                 $this->driver = new Kyvio($credentials);
     			break;
-
+                
             case 'ontraport':
                 $this->driver = new Ontraport($credentials);
                 break;
-
-            case 'emailOctopus':
-                $this->driver = new EmailOctopus($credentials);
-                break;    
     		
     		default:
     			return 'Not Found';
