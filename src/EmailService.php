@@ -71,7 +71,7 @@ class EmailService {
             case 'ontraport':
                 $this->driver = new Ontraport($credentials);
                 break;
-
+                
             case 'emailOctopus':
                 $this->driver = new EmailOctopus($credentials);
                 break;
