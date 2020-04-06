@@ -80,7 +80,7 @@ class ConvertKit
             return $this->successResponse();
 
         } catch (Exception $e) { // Catch any exceptions
-            throw new \Exception($e->getMessage(), 1);
+            throw new \Exception($e->getMessage());
         }
     }
 
@@ -201,7 +201,7 @@ class ConvertKit
             return $decoded_response;
 
         } catch (\Exception $e) {
-            throw new \Exception($e->message, 1);
+            throw new \Exception($e->getMessage());
         }
     }
 }
