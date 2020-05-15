@@ -13,3 +13,4 @@ This library provides a uniform way to integrate with several email services. Cu
 - Drip
 - Ontraport
 - EmailOctopus
+- Sendiio
