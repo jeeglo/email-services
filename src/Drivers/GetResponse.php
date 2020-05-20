@@ -70,9 +70,9 @@ class GetResponse
         try {
             if(!empty($lists)) {
 
-                $error = isset($lists->httpStatus) ? true : false; 
+                $error = isset($lists->httpStatus) ? true : false;
 
-                if(count($lists) > 0 && !$error) {
+                if(!$error) {
 
                     foreach ($lists as $list_id => $list) {
                         $response[] = [
@@ -81,6 +81,8 @@ class GetResponse
                         ];
                     }
 
+                } elseif (isset($lists->message)) {
+                    throw new \Exception($lists->message);
                 }
             }
         } catch (Exception $e) {
