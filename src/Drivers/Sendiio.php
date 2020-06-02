@@ -2,15 +2,19 @@
 
 namespace Jeeglo\EmailService\Drivers;
 
-class Kyvio 
+
+class Sendiio
 {
-    protected $api_key;
+    protected $api_token;
+    protected $api_secret;
+    protected $api_url;
 
     public function __construct($credentials) {
         // @todo Throw exception if API key is not available
-        $this->api_key = $credentials['api_key'];
-        $this->api_url = "https://kyvio.com/api/v1/";
-    }     
+        $this->api_token = $credentials['api_token'];
+        $this->api_secret = $credentials['api_secret'];
+        $this->api_url = "https://sendiio.com/api/v1/";
+    }
 
     /**
      * [getLists Fetch List through API]
@@ -19,63 +23,56 @@ class Kyvio
     public function getLists()
     {
         try {
-            $resp = $this->curl('mailing-list',[],'GET');
+
+            $res = $this->curl('lists/email');
+            $lists_data = json_decode($res, true);
             $lists = [];
-            $lists_data = json_decode($resp, true);
-            $error = (isset($lists_data['success']) && $lists_data['success'] == true ? 0 : 1);
-            $lists = [];
-            if(count($lists_data) > 0 && !$error) {
-                foreach ($lists_data['payload'] as $data) {
+            if (isset($lists_data['data'])) {
+                foreach ($lists_data['data']['lists'] as $data) {
                     $lists[] = array(
                         'name' => $data['name'],
-                        'id' => $data['listId']
+                        'id' => $data['id']
                     );
                 }
                 return $lists;
-            
+
             } else {
-                return ['error' => true];
+                return $this->failedResponse();
             }
 
         } catch (Exception $e) {
             throw new \Exception($e->getMessage());
         }
-        
     }
-
-     /**
-      * [addContact Add contact to list through API]
-      * @return array [return success or fail]
-      */
+    /**
+     * [addContact Add contact to list through API]
+     * @return array [return success or fail]
+     */
     public function addContact($data, $remove_tags = [], $add_tags = [])
     {
         try {
             // set param fields
-			$contact = array(
-			    'api_key' => $this->api_key,
-			    'list_id' => $data['list_id'],
-			    'email' => $data['email'],
-			    'name' => $data['first_name'].' '.$data['last_name']
+            $contact = array(
+                'email_list_id' => $data['list_id'],
+                'email' => $data['email'],
+                'First_Name' => $data['first_name'],
+                'Last_Name'  => $data['last_name']
             );
 
-            // send curl request
-            $response =  $this->curl('subscribers/create',$contact,"POST");
-            return $this->successResponse();
-            
+            // insert
+            $res =  $this->curl('lists/subscribe/json',$contact,"POST");
+            $response = json_decode($res);
+
+            if($response->msg == "You were successfully subscribed")
+            {
+                return $this->successResponse();
+            }
+
+
         } catch (Exception $e) {
-           throw new \Exception($e->getMessage());
+            throw new \Exception($e->getMessage());
         }
     }
-
-    /**
-     * [response description]
-     * @return  array [return response as key value]
-     */
-    private function response($lists)
-    {
-       
-    }
-
     /**
      * [successResponse description]
      * @return [array] [Success true]
@@ -107,19 +104,27 @@ class Kyvio
         {
             curl_setopt_array($curl, array(
                 CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_URL => $url."?api_key=".$this->api_key,
+                CURLOPT_URL => $url
+            ));
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+                "Content-Type: application/json",
+                "token: ".$this->api_token,
+                "secret:".$this->api_secret
             ));
         }
 
         if($method == 'POST')
-		{
+        {
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-			    'Content-Type: application/json',
+                'Content-Type: application/json',
+                'token:' .$this->api_token,
+                'secret:' .$this->api_secret,
             ));
-
+            curl_setopt($curl, CURLOPT_POST, 1);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
-        }
 
+        }
         // execute Curl
         $response = curl_exec($curl);
         // close the connection of Curl

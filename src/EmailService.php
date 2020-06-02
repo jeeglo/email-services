@@ -13,6 +13,10 @@ use Jeeglo\EmailService\Drivers\Drip as Drip;
 use Jeeglo\EmailService\Drivers\ConstantContact as ConstantContact;
 use Jeeglo\EmailService\Drivers\Aweber as Aweber;
 use Jeeglo\EmailService\Drivers\Kyvio as Kyvio;
+use Jeeglo\EmailService\Drivers\Ontraport as Ontraport;
+use Jeeglo\EmailService\Drivers\EmailOctopus as EmailOctopus;
+use Jeeglo\EmailService\Drivers\Sendiio as Sendiio;
+
 
 class EmailService {
 
@@ -65,7 +69,19 @@ class EmailService {
             case 'kyvio':
                 $this->driver = new Kyvio($credentials);
     			break;
-    		
+
+            case 'ontraport':
+                $this->driver = new Ontraport($credentials);
+                break;
+
+            case 'emailOctopus':
+                $this->driver = new EmailOctopus($credentials);
+                break;
+
+            case 'sendiio':
+                $this->driver = new Sendiio($credentials);
+                break;
+
     		default:
     			return 'Not Found';
     			break;
@@ -82,12 +98,25 @@ class EmailService {
     }
 
     /**
+     * [getTags for current driver]
+     * @param array $data for mailchimp driver but null for other drivers
+     * @return [array] [key value]
+     */
+    public function getTags($data = null)
+    {
+        if(!empty($data)){
+            return $this->driver->getTags($data);
+        }
+        return $this->driver->getTags();
+    }
+
+    /**
      * [addContact for adding user to current driver]
      * @param [type] $data [description]
      */
-    public function addContact($data)
+    public function addContact($data, $remove_tags = [], $add_tags = [])
     {
-		return $this->driver->addContact($data);
+		return $this->driver->addContact($data, $remove_tags, $add_tags);
     }
 
     /**

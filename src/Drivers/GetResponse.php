@@ -34,7 +34,7 @@ class GetResponse
     //  * [addContact Add contact to list through API]
     //  * @return string [return success or fail]
     //  */
-    public function addContact($data)
+    public function addContact($data, $remove_tags = [], $add_tags = [])
     {   
         // @todo throw exception if email field is empty or list id or Firstname or last name not available
         try {
@@ -48,7 +48,7 @@ class GetResponse
                 'campaign'          => array('campaignId' => $list_id)
             ));
 
-            if(isset($response->httpStatus) && $response->httpStatus == 400 || $response->httpStatus == 409) {
+            if(isset($response->httpStatus) && ($response->httpStatus == 400 || $response->httpStatus == 409)) {
                 throw new \Exception($response->message, 1);
             } else {
                 return $this->successResponse();
@@ -70,9 +70,9 @@ class GetResponse
         try {
             if(!empty($lists)) {
 
-                $error = isset($lists->httpStatus) ? true : false; 
+                $error = isset($lists->httpStatus) ? true : false;
 
-                if(count($lists) > 0 && !$error) {
+                if(!$error) {
 
                     foreach ($lists as $list_id => $list) {
                         $response[] = [
@@ -81,6 +81,8 @@ class GetResponse
                         ];
                     }
 
+                } elseif (isset($lists->message)) {
+                    throw new \Exception($lists->message);
                 }
             }
         } catch (Exception $e) {

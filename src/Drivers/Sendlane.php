@@ -25,67 +25,55 @@ class Sendlane
     {
         try {
             
-            $params = array(
-                'api' => $this->api_key,
-                'hash' => $this->hash,
-            );
+            $lists = $this->apiCall('lists', [ 'limit' => 1000 ]);
 
-            // Curl Post Query
-            $ch = curl_init('http://'.$this->domain.'.sendlane.com/api/v1/lists');
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
-
-            // execute Curl
-            $lists_data = curl_exec($ch);
-
-            // close the connection of Curl
-            curl_close($ch);
-
-            // Get Response
-            $lists = json_decode($lists_data);
-
-            return $this->response($lists);
+            return $this->response($lists, 'list');
         } catch (Exception $e) {
            throw new \Exception($e->getMessage());
         }
     }
 
     /**
+     * fetch tags through API
+     * @return array
+     */
+    public function getTags() {
+        try {
+            $tags = $this->apiCall('tags', [ 'limit' => 1000 ]);
+
+            return $this->response($tags, 'tag');
+        } catch (Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+
+    }
+
+    /**
      * [addContact Add contact to list through API]
      * @return string [return success or fail]
      */
-    public function addContact($data)
+    public function addContact($data, $removeTags, $addTags)
     {   
         // @todo throw exception if email field is empty or list id or not available
         try {
             
             // set param fields
             $params = array(
-                'api' => $this->api_key,
-                'hash' => $this->hash,
                 'list_id' => $data['list_id'],
                 'first_name' => (isset($data['first_name']) ? $data['first_name'] : null),
                 'last_name' => (isset($data['last_name']) ? $data['last_name'] : null),
-                'email' => $data['email']
+                'email' => $data['email'],
             );
 
-            // Curl Post Query
-            $ch = curl_init('http://'.$this->domain.'.sendlane.com/api/v1/list-subscriber-add');
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
-
-            // execute Curl
-            $response = curl_exec($ch);
-            // close the connection of Curl
-            curl_close($ch);
-
-            $decoded_response = json_decode($response);
-
-            if(isset($decoded_response->error->messages)) {
-                throw new \Exception($decoded_response->error->messages, 1);
-            } else {
-                return $this->successResponse();
+            if(is_array($addTags) && count($addTags) > 0) {
+                $params['tag_ids'] = implode(',', $addTags);
             }
+
+            $this->apiCall('list-subscriber-add', $params);
+
+            $this->sync($data, $removeTags, $addTags);
+
+            return $this->successResponse();
 
         } catch (Exception $e) { // Catch any exceptions
             throw new \Exception($e->getMessage(), 1);
@@ -93,22 +81,55 @@ class Sendlane
         }
     }
 
+/**
+     * [sync add and remove tags]
+     * @return [array] [Success true]
+     */
+    private function sync($data, $removeTags, $addTags) {
+        
+        try {
+            // Remove the tags
+            if(is_array($addTags) && count($addTags) > 0) {
+
+                $params = [
+                    'email' => $data['email'],
+                    'tag_ids' => implode(',', $addTags)
+                ];
+
+                $this->apiCall('tag-subscriber-add', $params);
+            }
+
+            //Add tags
+            if(is_array($removeTags) && count($removeTags) > 0 ) {             
+
+                $params = [
+                    'email' => $data['email'],
+                    'tag_ids' => implode(',', $removeTags)
+                ];
+
+                $this->apiCall('tag-subscriber-remove', $params);
+            }       
+
+        } catch (Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+    }
     /**
      * [response description]
      * @return  array [return response as key value]
      */
-    private function response($lists)
+    private function response($data, $prefix)
     {
         $response = [];
 
         try {
-            if(!empty($lists)) {
 
-                foreach ($lists as $list) {
-                    $response[] = array(
-                        'name' => $list->list_name,
-                        'id' => $list->list_id
-                    );
+            if(is_array($data) && count($data) > 0) {
+                foreach ($data as $item) {
+                    $response[] = [
+                        'name' => $item->{$prefix . '_name'},
+                        'id' => $item->{$prefix . '_id'}
+                    ];
                 }
             }
         } catch (Exception $e) {
@@ -134,5 +155,42 @@ class Sendlane
     private function failedResponse()
     {
         throw new \Exception('Something went wrong!');
+    }
+
+    private function apiCall($apiPath, $params = []) {
+
+        try {
+            $params['api'] = $this->api_key;
+            $params['hash'] = $this->hash;
+
+            $apiBasePath = 'https://'.$this->domain.'.sendlane.com/api/v1/';
+
+            $ch = curl_init($apiBasePath . $apiPath);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(                                                                          
+                'Content-Type: application/json',                                                                                
+            ));
+
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
+
+            // execute Curl
+            $response = curl_exec($ch);
+
+
+            // close the connection of Curl
+            curl_close($ch);
+
+            $decoded_response = json_decode($response);
+
+            //comment out becz of different response of getTags and getLists
+            // if(!isset($decoded_response->success)) {
+            //     throw new \Exception('Last operation was not successfull', 1);
+            // }
+
+            return $decoded_response;
+
+        } catch (\Exception $e) {
+            throw new \Exception($e, 1);
+        }
     }
 }
