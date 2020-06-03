@@ -1,38 +1,50 @@
 <?php
 
+
 namespace Jeeglo\EmailService\Drivers;
 
-class Kyvio 
+
+class Mailvio
 {
     protected $api_key;
 
-    public function __construct($credentials) {
-        // @todo Throw exception if API key is not available
+    public function __construct($credentials)
+    {
         $this->api_key = $credentials['api_key'];
-        $this->api_url = "https://kyvio.com/api/v1/";
-    }     
+        $this->api_url = "https://api.mailvio.com/v3/";
+    }
 
-    /**
-     * [getLists Fetch List through API]
-     * @return array
-     */
     public function getLists()
     {
+        $lists = [];
+        $limit = 10;
+        $offset = 0;
         try {
-            $resp = $this->curl('mailing-list',[],'GET');
-            $lists = [];
+            $resp = $this->curl('contacts/lists', ['offset' => $offset, 'limit' => $limit],'GET');
             $lists_data = json_decode($resp, true);
-            $error = (isset($lists_data['success']) && $lists_data['success'] == true ? 0 : 1);
-            $lists = [];
-            if(count($lists_data) > 0 && !$error) {
-                foreach ($lists_data['payload'] as $data) {
+
+          /*  $count = $lists_data['count'];
+            $total_fetched_records = count($lists_data['lists']);
+            if($count > $limit)
+            {
+               do {
+                   $offset += $limit;
+                   $resp = $this->curl('contacts/lists', ['offset' => $offset, 'limit' => $limit],'GET');
+                   $lists_data = json_decode($resp, true);
+                   $lists[] = $lists_data['lists'];
+                   $total_fetched_records += count($lists_data['lists']);
+               } while($total_fetched_records !== $count);
+            }*/
+
+            if($lists_data['count']> 0) {
+                foreach ($lists_data['lists'] as $data) {
                     $lists[] = array(
                         'name' => $data['name'],
-                        'id' => $data['listId']
+                        'id' => $data['id']
                     );
                 }
                 return $lists;
-            
+
             } else {
                 return ['error' => true];
             }
@@ -40,30 +52,32 @@ class Kyvio
         } catch (Exception $e) {
             throw new \Exception($e->getMessage());
         }
-        
+
     }
 
-     /**
-      * [addContact Add contact to list through API]
-      * @return array [return success or fail]
-      */
+    /**
+     * [addContact Add contact to list through API]
+     * @return array [return success or fail]
+     */
     public function addContact($data, $remove_tags = [], $add_tags = [])
     {
         try {
             // set param fields
-			$contact = array(
-			    'api_key' => $this->api_key,
-			    'list_id' => $data['list_id'],
-			    'email' => $data['email'],
-			    'name' => $data['first_name'].' '.$data['last_name']
+            $contact = array(
+                'email' => $data['email'],
+                'attributes' => [
+                    'FIRSTNAME' => isset($data['first_name']) ? $data['first_name'] : '',
+                    'LASTNAME'  => isset($data['last_name']) ? $data['last_name'] : '',
+                ],
+                'listIds' => [ intval($data['list_id'])],
             );
 
             // send curl request
-            $response =  $this->curl('subscribers/create',$contact,"POST");
+            $response =  $this->curl('contacts',$contact,"POST");
             return $this->successResponse();
-            
+
         } catch (Exception $e) {
-           throw new \Exception($e->getMessage());
+            throw new \Exception($e->getMessage());
         }
     }
 
@@ -73,7 +87,7 @@ class Kyvio
      */
     private function response($lists)
     {
-       
+
     }
 
     /**
@@ -103,20 +117,23 @@ class Kyvio
     {
         $url = $this->api_url.$api_method;
         $curl = curl_init($url);
+        $offset = isset( $data['offset']) ? $data['offset'] : '';
+        $limit = isset( $data['limit']) ? $data['limit'] : '';
         if($method == 'GET')
         {
             curl_setopt_array($curl, array(
                 CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_URL => $url."?api_key=".$this->api_key,
+                CURLOPT_URL => $url."?limit=.'$limit'.&offset=".$offset,
             ));
         }
 
-        if($method == 'POST')
-		{
-            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-			    'Content-Type: application/json',
-            ));
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json',
+            'api-key:'.$this->api_key,
+        ));
 
+        if($method == 'POST')
+        {
             curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
         }
 
@@ -127,4 +144,5 @@ class Kyvio
 
         return $response;
     }
+
 }

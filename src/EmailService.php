@@ -7,6 +7,7 @@ use Jeeglo\EmailService\Drivers\ActiveCampaign as ActiveCampaign;
 use Jeeglo\EmailService\Drivers\GetResponse as GetResponse;
 use Jeeglo\EmailService\Drivers\iContact as iContact;
 use Jeeglo\EmailService\Drivers\Mailerlite as Mailerlite;
+use Jeeglo\EmailService\Drivers\Mailvio;
 use Jeeglo\EmailService\Drivers\Sendlane as Sendlane;
 use Jeeglo\EmailService\Drivers\ConvertKit as ConvertKit;
 use Jeeglo\EmailService\Drivers\Drip as Drip;
@@ -69,7 +70,7 @@ class EmailService {
             case 'kyvio':
                 $this->driver = new Kyvio($credentials);
     			break;
-                
+
             case 'ontraport':
                 $this->driver = new Ontraport($credentials);
                 break;
@@ -80,6 +81,10 @@ class EmailService {
 
             case 'sendiio':
                 $this->driver = new Sendiio($credentials);
+                break;
+
+            case 'mailvio':
+                $this->driver = new Mailvio($credentials);
                 break;
 
     		default:
