@@ -22,7 +22,7 @@ class Mailchimp
     public function getLists()
     {
         try {
-            $lists = $this->mailchimp->get('lists');
+            $lists = $this->mailchimp->get('lists', ['count' => 1000]);
 
             return $this->response($lists);
         } catch (Exception $e) {

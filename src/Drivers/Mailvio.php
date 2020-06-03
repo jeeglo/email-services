@@ -66,8 +66,8 @@ class Mailvio
             $contact = array(
                 'email' => $data['email'],
                 'attributes' => [
-                    'FIRSTNAME' => $data['first_name'],
-                    'LASTNAME'  => $data['last_name']
+                    'FIRSTNAME' => isset($data['first_name']) ? $data['first_name'] : '',
+                    'LASTNAME'  => isset($data['last_name']) ? $data['last_name'] : '',
                 ],
                 'listIds' => [ intval($data['list_id'])],
             );
