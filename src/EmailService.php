@@ -17,6 +17,7 @@ use Jeeglo\EmailService\Drivers\Kyvio as Kyvio;
 use Jeeglo\EmailService\Drivers\Ontraport as Ontraport;
 use Jeeglo\EmailService\Drivers\EmailOctopus as EmailOctopus;
 use Jeeglo\EmailService\Drivers\Sendiio as Sendiio;
+use Jeeglo\EmailService\Drivers\Infusionsoft as Infusionsoft;
 
 
 class EmailService {
@@ -87,6 +88,10 @@ class EmailService {
                 $this->driver = new Mailvio($credentials);
                 break;
 
+            case 'infusionsoft':
+                $this->driver = new Infusionsoft($credentials);
+            break;
+
     		default:
     			return 'Not Found';
     			break;
@@ -140,6 +145,15 @@ class EmailService {
     public function getConnectData()
     {
         return $this->driver->getConnectData();
+    }
+
+    /**
+     * Regenerate/Refresh Access/Refresh Tokens from Email service
+     * @param [type] $data [description]
+     */
+    public function regenrateAccessToken($refresh_token)
+    {
+        return $this->driver->regenrateAccessToken($refresh_token);
     }
  
 }
