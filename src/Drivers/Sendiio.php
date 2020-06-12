@@ -125,6 +125,10 @@ class Sendiio
             curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
 
         }
+
+        // Set to false due to Sendiio SSL certificate version issue
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+
         // execute Curl
         $response = curl_exec($curl);
         // close the connection of Curl

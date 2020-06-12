@@ -127,6 +127,8 @@ class Mailvio
             ));
         }
 
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
             'Content-Type: application/json',
             'api-key:'.$this->api_key,
