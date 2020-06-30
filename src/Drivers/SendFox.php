@@ -98,15 +98,6 @@ class SendFox
     }
 
     /**
-     * [response description]
-     * @return  array [return response as key value]
-     */
-    private function response($lists)
-    {
-
-    }
-
-    /**
      * [successResponse description]
      * @return [array] [Success true]
      */
