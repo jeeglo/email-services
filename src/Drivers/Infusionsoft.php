@@ -72,7 +72,8 @@ class Infusionsoft
                 ),
                 'given_name' => trim((isset($data['first_name']) ? $data['first_name'] : null)),
                 'family_name' => trim((isset($data['last_name']) ? $data['last_name'] : null)),
-                'duplicate_option' => 'Email'
+                'duplicate_option' => 'Email',
+                'opt_in_reason' => 'Member of a Product/Collection (ProductDyno)'
             );
 
             // Send call to add contact
