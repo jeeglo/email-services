@@ -16,5 +16,5 @@ This library provides a uniform way to integrate with several email services. Cu
 - Sendiio
 - Mailvio
 - Infusionsoft
-- SendFox
-- Moosend
+
+
