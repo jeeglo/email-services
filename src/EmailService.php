@@ -90,17 +90,17 @@ class EmailService {
 
             case 'infusionsoft':
                 $this->driver = new Infusionsoft($credentials);
-            break;
+                break;
 
             case 'sendFox':
                 $this->driver = new SendFox($credentials);
-            break;
+                break;
 
             case 'moosend':
                 $this->driver = new Moosend($credentials);
                 break;
 
-                default:
+            default:
     			return 'Not Found';
     			break;
     	}
@@ -125,6 +125,7 @@ class EmailService {
         if(!empty($data)){
             return $this->driver->getTags($data);
         }
+
         return $this->driver->getTags();
     }
 
