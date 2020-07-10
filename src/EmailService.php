@@ -19,7 +19,7 @@ use Jeeglo\EmailService\Drivers\Ontraport as Ontraport;
 use Jeeglo\EmailService\Drivers\EmailOctopus as EmailOctopus;
 use Jeeglo\EmailService\Drivers\Sendiio as Sendiio;
 use Jeeglo\EmailService\Drivers\Infusionsoft as Infusionsoft;
-
+use Jeeglo\EmailService\Drivers\Moosend as Moosend;
 
 class EmailService {
 
@@ -96,7 +96,11 @@ class EmailService {
                 $this->driver = new SendFox($credentials);
             break;
 
-    		default:
+            case 'moosend':
+                $this->driver = new Moosend($credentials);
+                break;
+
+                default:
     			return 'Not Found';
     			break;
     	}
@@ -109,7 +113,7 @@ class EmailService {
     public function getLists()
 	{
         return $this->driver->getLists();
-    }
+	}
 
     /**
      * [getTags for current driver]
@@ -130,7 +134,7 @@ class EmailService {
      */
     public function addContact($data, $remove_tags = [], $add_tags = [])
     {
-		return $this->driver->addContact($data, $remove_tags, $add_tags);
+        return $this->driver->addContact($data, $remove_tags, $add_tags);
     }
 
     /**
