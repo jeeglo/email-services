@@ -146,4 +146,3 @@ class Moosend
         return $response;
     }
 }
-//Test
