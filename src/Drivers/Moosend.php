@@ -23,6 +23,7 @@ class Moosend
     public function getLists()
     {
         $lists = [];
+
         try {
             // Send curl call to get the lists
             $response = $this->curl('lists.json',  'GET');
@@ -32,22 +33,15 @@ class Moosend
 
             // if we found the lists data then we need to make the response data
             if(is_array($lists_data["Context"]["MailingLists"]) && count($lists_data) > 0) {
-                if(isset($lists_data["Context"]["MailingLists"])) {
-                    foreach ($lists_data["Context"]["MailingLists"] as $data) {
-
-                        $lists[] = array(
-                            'name' => $data["Name"],
-                            'id' => $data['ID']
-                        );
-                    }
-
-                } else {
-                    return ['error' => true];
+                foreach ($lists_data["Context"]["MailingLists"] as $data) {
+                    $lists[] = array(
+                        'name' => $data["Name"],
+                        'id' => $data['ID']
+                    );
                 }
 
                 // return the lists data
                 return $lists;
-
             } else {
                 return ['error' => true];
             }
@@ -66,12 +60,13 @@ class Moosend
         try {
             // set param fields to send email service
             $contact = array(
-                    'Email'           => $data['email'],
+                    'Email' => $data['email'],
                     'Name' => (isset($data['first_name']) ? $data['first_name'] : null).' '.(isset($data['last_name']) ? $data['last_name'] : null),
-                    'MailingListId'   => $data['list_id']
+                    'MailingListId' => $data['list_id']
             );
+
             // send curl request to add contact
-            $response =  $this->curl("subscribers/".$contact["MailingListId"]."/subscribe.json", $contact,"POST");//Calling Curl Method
+            $response =  $this->curl("subscribers/".$contact["MailingListId"]."/subscribe.json", $contact,"POST");
 
             // if we get the response
             if($response) {
@@ -79,9 +74,11 @@ class Moosend
                 $response = json_decode($response, true);
                 // if user has been added successfully
                 if(isset($response['Context']['ID'])) {
-                    return $this->successResponse();//Success Message after addcontact
+                    // Success Message after add contact
+                    return $this->successResponse();
                 } else {
-                    return ['error' => true];//Return False on fail to addContact
+                    // Return False on fail to addContact
+                    return ['error' => true];
                 }
             }
         } catch (Exception $e) {
@@ -113,10 +110,12 @@ class Moosend
      */
     private function curl($api_method, $data = [], $method = 'GET', $headers = [])
     {
+        // Initialize curl
         $ch = curl_init();
+
         // Set the API call url
         $url = $this->api_url.$api_method.'?apikey='.$this->api_key;
-        // Initialize curl
+
         // set curl setting params
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
@@ -128,6 +127,7 @@ class Moosend
                 CURLOPT_URL => $url,
             ));
         }
+
         if($method == 'POST')
         {
             curl_setopt($ch, CURLOPT_URL, $url);
@@ -138,6 +138,7 @@ class Moosend
                 "Accept: application/json"
             ));
         }
+
         // execute Curl
         $response = curl_exec($ch);
         curl_close($ch);
