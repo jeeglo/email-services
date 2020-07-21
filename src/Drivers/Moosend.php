@@ -31,17 +31,30 @@ class Moosend
             // Decoded the json response
             $lists_data = json_decode($response, true);
 
-            // if we found the lists data then we need to make the response data
-            if(is_array($lists_data["Context"]["MailingLists"]) && count($lists_data) > 0) {
-                foreach ($lists_data["Context"]["MailingLists"] as $data) {
-                    $lists[] = array(
-                        'name' => $data["Name"],
-                        'id' => $data['ID']
-                    );
-                }
+            // if we found data in response
+            if($lists_data) {
 
-                // return the lists data
-                return $lists;
+                // if response is array then get the lists data node
+                if(is_array($lists_data) && count($lists_data) > 0) {
+                    
+                    // if we found the lists data node then we need to make the response data
+                    if(isset($lists_data["Context"]["MailingLists"])) {
+                        
+                        // loop through the list data and append in lists array
+                        foreach ($lists_data["Context"]["MailingLists"] as $data) {
+                            $lists[] = array(
+                                'name' => $data["Name"],
+                                'id' => $data['ID']
+                            );
+                        }
+                        
+                        // return the lists data
+                        return $lists;
+
+                    } else {
+                        return ['error' => true];
+                    }
+                }
             } else {
                 return ['error' => true];
             }
@@ -58,10 +71,17 @@ class Moosend
     public function addContact($data)
     {
         try {
+            
+            // set the first name and last name value conditionally 
+            $name = array(
+                'first_name'=>(isset($data['first_name']) ? $data['first_name'] : null),
+                 'last_name'=>(isset($data['last_name']) ? $data['last_name'] : null)
+            );
+
             // set param fields to send email service
             $contact = array(
                     'Email' => $data['email'],
-                    'Name' => (isset($data['first_name']) ? $data['first_name'] : null).' '.(isset($data['last_name']) ? $data['last_name'] : null),
+                    'Name' => implode($name, ' '),
                     'MailingListId' => $data['list_id']
             );
 
@@ -121,15 +141,13 @@ class Moosend
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        if($method == 'GET')
-        {
+        if($method == 'GET') {
             curl_setopt_array($ch, array(
                 CURLOPT_URL => $url,
             ));
         }
 
-        if($method == 'POST')
-        {
+        if($method == 'POST') {
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
