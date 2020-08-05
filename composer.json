@@ -3,7 +3,7 @@
 	"description": "Uniform SDK to integrate with popular marketing email services.",
 	"type": "Library",
 	"license": "MIT",
-	"version": "1.0.13",
+	"version": "1.0.14",
 	"autoload": {
 		"psr-4": {
 			"Jeeglo\\EmailService\\": "src"
