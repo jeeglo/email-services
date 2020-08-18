@@ -20,6 +20,7 @@ use Jeeglo\EmailService\Drivers\EmailOctopus as EmailOctopus;
 use Jeeglo\EmailService\Drivers\Sendiio as Sendiio;
 use Jeeglo\EmailService\Drivers\Infusionsoft as Infusionsoft;
 use Jeeglo\EmailService\Drivers\Moosend as Moosend;
+use Jeeglo\EmailService\Drivers\Mautic as Mautic;
 
 class EmailService {
 
@@ -98,6 +99,10 @@ class EmailService {
 
             case 'moosend':
                 $this->driver = new Moosend($credentials);
+                break;
+
+            case 'mautic':
+                $this->driver = new Mautic($credentials);
                 break;
 
             default:

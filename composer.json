@@ -19,6 +19,7 @@
 		"constantcontact/constantcontact": "1.3.*",
 		"aweber/aweber": "1.1.18",
 		"ontraport/sdk-php": "*",
-		"infusionsoft/php-sdk": "1.4.*"
+		"infusionsoft/php-sdk": "1.4.*",
+		"mautic/api-library": "^2.16"
 	}
 }
