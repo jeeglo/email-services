@@ -6,45 +6,30 @@ use Mautic\MauticApi;
 
 class Mautic
 {
-    protected $username;
-    protected $password;
-    protected $api_url;
-    protected $mautic_auth;
-    protected $mautic_api;
-    protected $mautic;
+    protected $apiUrl;
+    protected $mauticAuth;
+    protected $mauticApi;
 
     /**
      * Prepare the constructor and set the  values accordingly
-     * SendFox constructor.
+     * Mautic constructor.
      * @param $credentials
      */
     public function __construct($credentials) {
 
         try {
-            $this->username = $credentials['name'];
-            $this->password = $credentials['password'];
-            $this->api_url = $credentials['api_url'];
+            // set the variables from credentials data
+            $this->apiUrl = $credentials['api_url'];
 
+            // Connecting Mautic
             $initAuth = new ApiAuth();
-            $this->mautic_auth = $initAuth->newAuth($credentials, 'BasicAuth');
+            $this->mauticAuth = $initAuth->newAuth($credentials, 'BasicAuth');
 
-            if ($this->mautic_auth) {
-
-
-                if(isset($this->mautic_auth->errors)) {
-                    echo 'ERROR';
-                }
-
-                //check the error if credentials are invalid.. if invalid then return
-
-                // initialize the Mautic API instance
-               $test= $this->mautic_api = new MauticApi();
-
-            }
+            // initialize the Mautic API instance
+            $this->mauticApi = new MauticApi();
 
         } catch (\Exception $e) {
-echo "Faild";
-               echo 'Exception: '. $e->getMessage();
+            throw new \Exception($e->getMessage());
         }
     }
 
@@ -54,62 +39,60 @@ echo "Faild";
      */
     public function getTags() {
         try {
-if($this->mautic_auth) { // This condition is not working
+            // getting the all tags of Mautic
+            $tagApi = $this->mauticApi->newApi('tags', $this->mauticAuth, $this->apiUrl);
 
-    $tagApi = $this->mautic_api->newApi('tags', $this->mautic_auth, $this->api_url);
+            // Get tags list
+            $response = $tagApi->getList();
 
-    // Get Contact list
+            if ($response) {
+                // if response has error then stop the further execution of code
+                if(isset($response['error'])) {
+                    return $this->failedResponse();
+                }
 
-    $results = $tagApi->getList();
-    echo "<pre>";
-    if (isset($results["error"]["message"])) { // This Condtion is working when credtionals are invalid
-        return $this->failedResponse();
-    } else {
-        return $results;
-    }
-}else{
-    return "Given Credtionals are Invalid ";
-}
-
+                // if tags are available then return all tags
+                if (isset($response["tags"])) {
+                    $tags = $response['tags'];
+                    return $this->response($tags);
+                }
+            }
         } catch (\Exception $e) {
-            echo "Failed";
-//            throw new \Exception($e->getMessage());
-            $this->failedResponse();
+            throw new \Exception($e->getMessage());
         }
     }
 
     /**
-     * [addContact Add contact to list through API]
+     * [addContact Add contact to against the tags through API]
+     * @param $data
+     * @param array $removeTags
+     * @param array $addTags
      * @return string [return success or fail]
+     * @throws \Mautic\Exception\ContextNotFoundException
      */
-    public function addContact($data, $addTags = [] ,$removeTags = [])
+    public function addContact($data, $removeTags = [], $addTags = [])
     {
+        // Set param fields to send email service
+        $contact = array(
+            'firstname' => $data['first_name'],
+            'lastname' => $data['last_name'],
+            'email' => $data['email']
+        );
 
+        // Send request to add the contact
+        $contactApi = $this->mauticApi->newApi('contacts', $this->mauticAuth, $this->apiUrl);
+        $response = $contactApi->create($contact);
 
-            // set param fields to send email service
-            $contact = array(
-                'firstname' => $data['firstname'],
-                'lastname' => $data['lastname'],
-                'email' => $data['email'],
-                'ipAddress' => $data['ipAddress'],
-                'ipAddress' => $data['ipAddress'],
-//                'tags'=>$data["tags"]
+        if($response) {
+            // if response has error then return error
+            if(isset($response['error'])) {
+                return $this->failedResponse();
+            }
 
-
-            );
-        if ($this->mautic_auth) {
-            $contactApi = $this->mautic_api->newApi('contacts', $this->mautic_auth, $this->api_url);
-            $response = $contactApi->create($contact);
-
-            echo "<pre>";
-
-            if(isset($response["error"]["message"]) && !$response["error"]["message"]){
-
-
-            if (isset($response["contact"]["id"])) {
+            // if response has contact id then assign it into data
+            if(isset($response['contact'])) {
                 $id = $response["contact"]["id"];
 
-                // If contact added successfully then add/remove the tags
                 if ($id) {
                     $data['contact_id'] = $id;
                     $this->sync($data, $removeTags, $addTags);
@@ -117,49 +100,57 @@ if($this->mautic_auth) { // This condition is not working
                     return $this->successResponse();
                 }
             }
-            }else{
-                echo isset($response["error"]["message"]) ? $response["error"]["message"] : " ";
-            }
-        }else{
-            echo "Invlid Credionals";
         }
     }
+
+    /**
+     * [sync add and remove tags]
+     * @param $data
+     * @param $removeTags
+     * @param $addTags
+     * @return void [array] [Success true]
+     * @throws \Exception
+     */
     private function sync($data, $removeTags ,$addTags)
     {
+        try {
+            // Initialize the contact API
+            $contactApi = $this->mauticApi->newApi('contacts', $this->mauticAuth, $this->apiUrl);
 
-      try {
-            // Add the Tags
-          // Create new a contact of ID 1 is not found?
-          $createIfNotFound = true;
-          $remove_tag_data = array_merge($data, $removeTags);
+            // Adding the tags
+            if(is_array($addTags) && count($addTags) > 0) {
+                // Preparing the tags node for adding tags
+                $addTags['tags'] = $addTags;
 
+                // Merging the contact data array with add tags array to prevent lost the previous contact data like name, email etc
+                $add_tag_data = array_merge($data, $addTags);
 
-          $add_tag_data = array_merge($data, $addTags);
-          $contactApi = $this->mautic_api->newApi('contacts', $this->mautic_auth, $this->api_url);
+                // Send request to add tags
+                $contactApi->edit($data['contact_id'], $add_tag_data);
+            }
 
-          // add tags
-          if(is_array($add_tag_data) && count($add_tag_data) > 0) {
-              $contactApi->edit($data['contact_id'], $add_tag_data, $createIfNotFound);
-          }
+            // Removing the tags
+            if(is_array($removeTags) && count($removeTags) > 0 ) {
 
-          // remove tags
-          if(is_array($remove_tag_data) && count($remove_tag_data) > 0 ) {
-              $contactApi->edit($data['contact_id'], $remove_tag_data, '');
-          }
+                // Preparing the tags node for adding tags - Appending the (-) symbol to against the tag values to removing the tags
+                $removeTags['tags'] = preg_filter('/^/', '-', $removeTags);
 
+                // Merging the contact data array with add tags array to prevent lost the previous contact data like name, email etc
+                $remove_tag_data = array_merge($data, $removeTags);
+                $contactApi->edit($data['contact_id'], $remove_tag_data);
+            }
 
         } catch (\Exception $e) {
-
-           throw new \Exception($e->getMessage());
+            throw new \Exception($e->getMessage());
         }
     }
+
     /**
      * [successResponse description]
      * @return [array] [Success true]
      */
     private function successResponse()
     {
-
         return ['success' => 1];
     }
 
@@ -169,20 +160,25 @@ if($this->mautic_auth) { // This condition is not working
      */
     private function failedResponse()
     {
-        echo "Something went wrong";
-        //throw new \Exception('Something went wrong!');
+        throw new \Exception('Something went wrong!');
     }
+
+    /**
+     * [successResponse description]
+     * @param $data
+     * @return array [array] [Success true]
+     * @throws \Exception
+     */
     private function response($data)
     {
         $response = [];
-
         try {
 
             if(is_array($data) && count($data) > 0) {
                 foreach ($data as $item) {
                     $response[] = [
-                        'id' => $item->tag_id,
-                        'name' => $item->tag_name
+                        'id' => $item['tag'],
+                        'name' => $item['tag']
                     ];
                 }
             }
