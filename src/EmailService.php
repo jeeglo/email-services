@@ -1,6 +1,5 @@
 <?php
 
- // include('email-services/src/services/Mailchimp.php');
 namespace Jeeglo\EmailService;
 use Jeeglo\EmailService\Drivers\Mailchimp as Mailchimp;
 use Jeeglo\EmailService\Drivers\ActiveCampaign as ActiveCampaign;
@@ -21,6 +20,7 @@ use Jeeglo\EmailService\Drivers\Sendiio as Sendiio;
 use Jeeglo\EmailService\Drivers\Infusionsoft as Infusionsoft;
 use Jeeglo\EmailService\Drivers\Moosend as Moosend;
 use Jeeglo\EmailService\Drivers\Mautic as Mautic;
+use Jeeglo\EmailService\Drivers\CampaignRefinery;
 
 class EmailService {
 
@@ -103,6 +103,10 @@ class EmailService {
 
             case 'mautic':
                 $this->driver = new Mautic($credentials);
+                break;
+
+            case 'campaignRefinery':
+                $this->driver = new CampaignRefinery($credentials);
                 break;
 
             default:

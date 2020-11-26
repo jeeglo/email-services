@@ -18,3 +18,4 @@ This library provides a uniform way to integrate with several email services. Cu
 - Infusionsoft
 - SendFox
 - Moosend
+- Campaign Refinery
