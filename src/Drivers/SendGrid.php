@@ -39,7 +39,6 @@ class SendGrid
 
             //  send the call to API to fetch
             $res = $this->curl('lists?page_size=1000');
-
             if($res) {
                 // decode the response
                 $list_data = json_decode($res, true);
@@ -105,9 +104,6 @@ class SendGrid
                 "content-type: application/json"
             ),
             CURLOPT_TIMEOUT => 30,
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-
         ));
 
         // set the curl PUT params if request type is PUT
