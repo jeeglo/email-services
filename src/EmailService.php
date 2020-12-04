@@ -21,6 +21,7 @@ use Jeeglo\EmailService\Drivers\Infusionsoft as Infusionsoft;
 use Jeeglo\EmailService\Drivers\Moosend as Moosend;
 use Jeeglo\EmailService\Drivers\Mautic as Mautic;
 use Jeeglo\EmailService\Drivers\CampaignRefinery;
+use Jeeglo\EmailService\Drivers\SendGrid;
 
 class EmailService {
 
@@ -107,6 +108,10 @@ class EmailService {
 
             case 'campaignRefinery':
                 $this->driver = new CampaignRefinery($credentials);
+                break;
+
+            case 'sendGrid':
+                $this->driver = new SendGrid($credentials);
                 break;
 
             default:

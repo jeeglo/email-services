@@ -1,0 +1,5 @@
+/vendor
+composer.lock
+.idea
+autoload.php
+index.php
