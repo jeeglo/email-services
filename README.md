@@ -19,3 +19,4 @@ This library provides a uniform way to integrate with several email services. Cu
 - SendFox
 - Moosend
 - Campaign Refinery
+- SendGrid
