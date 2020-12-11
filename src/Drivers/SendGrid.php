@@ -39,6 +39,7 @@ class SendGrid
 
             //  send the call to API to fetch
             $res = $this->curl('lists?page_size=1000');
+
             if($res) {
                 // decode the response
                 $list_data = json_decode($res, true);
@@ -70,13 +71,19 @@ class SendGrid
     {
         try {
 
+            $contact_data = array(
+                'list_ids' => array($data['list_id']),
+                'contacts' => array($data)
+            );
+
             // send call to API to add contact
-            $res =  $this->curl('contacts', $data, "PUT");
+            $res =  $this->curl('contacts', $contact_data, "PUT");
             $res = json_decode($res);
 
             if(isset($res->job_id)) {
                 $this->successResponse();
             }
+
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
@@ -89,6 +96,7 @@ class SendGrid
      */
     private function curl($api_method, $data = [], $method = 'GET', $headers = [])
     {
+
         // set the url
         $url = $this->api_url.$api_method;
 
