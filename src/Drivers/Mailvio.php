@@ -16,35 +16,47 @@ class Mailvio
 
     public function getLists()
     {
-        $lists = [];
-        $limit = 10;
+        $all_lists = [];
+        $response_lists = [];
+        $limit = 50;
         $offset = 0;
+
         try {
             $resp = $this->curl('contacts/lists', ['offset' => $offset, 'limit' => $limit],'GET');
-            $lists_data = json_decode($resp, true);
+            $data = json_decode($resp, true);
 
-          /*  $count = $lists_data['count'];
-            $total_fetched_records = count($lists_data['lists']);
-            if($count > $limit)
-            {
-               do {
-                   $offset += $limit;
-                   $resp = $this->curl('contacts/lists', ['offset' => $offset, 'limit' => $limit],'GET');
-                   $lists_data = json_decode($resp, true);
-                   $lists[] = $lists_data['lists'];
-                   $total_fetched_records += count($lists_data['lists']);
-               } while($total_fetched_records !== $count);
-            }*/
+            // Getting count if count node is set
+            $count = (isset($data['count']) ? $data['count'] : 0);
+            $total_fetched_records = (isset($data['lists']) ? count($data['lists']) : 0);
 
-            if($lists_data['count']> 0) {
-                foreach ($lists_data['lists'] as $data) {
-                    $lists[] = array(
-                        'name' => $data['name'],
-                        'id' => $data['id']
-                    );
+            // Check if the count is great than 0
+            if($count > 0) {
+
+                // set the current lists result
+                $all_lists[] = $data['lists'];
+
+                // Check if total records is great than limit
+                if($count > $limit)
+                {
+                    do {
+                        $offset += $limit;
+                        $resp = $this->curl('contacts/lists', ['offset' => $offset, 'limit' => $limit],'GET');
+                        $data = json_decode($resp, true);
+                        $all_lists[] = $data['lists'];
+                        $total_fetched_records += count($data['lists']);
+                    } while($total_fetched_records !== $count);
                 }
-                return $lists;
 
+                // Set the data in array
+                foreach ($all_lists as $lists) {
+                    foreach ( $lists as $list) {
+                        $response_lists[] = array(
+                            'name' => $list['name'],
+                            'id' => $list['id']
+                        );
+                    }
+                }
+                return $response_lists;
             } else {
                 return ['error' => true];
             }
@@ -123,7 +135,7 @@ class Mailvio
         {
             curl_setopt_array($curl, array(
                 CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_URL => $url."?limit=.'$limit'.&offset=".$offset,
+                CURLOPT_URL => $url."?limit=".$limit."&offset=".$offset,
             ));
         }
 
