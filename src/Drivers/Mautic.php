@@ -188,4 +188,21 @@ class Mautic
 
         return $response;
     }
+
+    /**
+     * Mautic test credentials
+     */
+    public function verifyCredentials()
+    {
+        $tagApi = $this->mauticApi->newApi('tags', $this->mauticAuth, $this->apiUrl);
+
+        // Get tags list
+        $response = $tagApi->getList();
+        if(isset($response['error']) && $response['error']) {
+            return json_encode(['error' => 1, 'message' =>$response['error']['message']]);
+
+        } else {
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+        }
+    }
 }

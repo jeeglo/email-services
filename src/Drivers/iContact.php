@@ -111,4 +111,20 @@ class iContact
     {
         throw new \Exception('Something went wrong!');
     }
+
+    /**
+     * iContact test credentials
+     */
+    public function verifyCredentials()
+    {
+        $response = $this->iContact->getLists();
+
+        if(!$response) {
+            return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
+
+        } else {
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+        }
+
+    }
 }

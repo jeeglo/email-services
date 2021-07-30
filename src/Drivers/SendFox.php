@@ -162,4 +162,20 @@ class SendFox
         return $response;
     }
 
+    /**
+     * Send Fox test credentials
+     */
+    public function verifyCredentials()
+    {
+
+        $response = $this->getLists();
+
+        if(isset($response['error']) && $response['error']) {
+            return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
+
+        } else {
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+        }
+    }
+
 }

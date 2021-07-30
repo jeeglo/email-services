@@ -136,4 +136,21 @@ class Sendiio
 
         return $response;
     }
+
+    /**
+     * Sendiio test credentials
+     */
+    public function verifyCredentials()
+    {
+        $response = $this->curl('lists/email');
+
+        $response = json_decode($response);
+
+        if(isset($response->error) && $response->error) {
+            return json_encode(['error' => 1, 'message' => $response->msg]);
+
+        } else {
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+        }
+    }
 }

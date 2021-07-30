@@ -242,4 +242,18 @@ class Infusionsoft
     {
         throw new \Exception('Something went wrong!');
     }
+
+    /**
+     * Infusionsoft test credentials
+     */
+    public function verifyCredentials()
+    {
+        try {
+            $response = $this->getTags();
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+
+        } catch (\Exception $e) {
+            return json_encode(['error' => 1, 'message' => $e->getMessage()]);
+        }
+    }
 }

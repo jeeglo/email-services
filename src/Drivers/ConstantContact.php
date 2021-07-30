@@ -170,4 +170,19 @@ class ConstantContact
     {
         throw new \Exception('Something went wrong!');
     }
+
+    /**
+     * ContantContact test credentials
+     */
+    public function verifyCredentials()
+    {
+        try {
+            $this->cc->getLists($this->access_token);
+
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+
+        } catch (\Exception $e) {
+            return json_encode(['error' => 1, 'message' => $e->getMessage()]);
+        }
+    }
 }

@@ -204,4 +204,22 @@ class ConvertKit
             throw new \Exception($e->getMessage());
         }
     }
+
+    /**
+     * Convert Kit test credentials
+     */
+    public function verifyCredentials()
+    {
+        try {
+            $apiPath = 'forms?api_key=' . $this->api_key;
+            $response = $this->apiCall($apiPath);
+
+            if(isset($response->forms)) {
+                return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+            }
+
+        } catch (\Exception $e) {
+            return json_encode(['error' => 1, 'message' => $e->getMessage()]);
+        }
+    }
 }

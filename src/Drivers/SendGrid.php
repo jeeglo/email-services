@@ -141,4 +141,23 @@ class SendGrid
     {
         return ['success' => 1];
     }
+
+
+    /**
+     * SendGrid test credentials
+     */
+    public function verifyCredentials()
+    {
+
+        $response = $this->curl('lists?page_size=1000');
+
+        $response = json_decode($response);
+
+        if(isset($response->errors)) {
+            return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
+
+        } else {
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+        }
+    }
 }

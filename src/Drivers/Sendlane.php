@@ -193,4 +193,20 @@ class Sendlane
             throw new \Exception($e, 1);
         }
     }
+    /**
+     * SandLane test credentials
+     */
+    public function verifyCredentials()
+    {
+        $response = $this->getLists();
+
+        $response = json_decode($response);
+
+        if(isset($response->errors)) {
+            return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
+
+        } else {
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+        }
+    }
 }

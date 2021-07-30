@@ -170,4 +170,20 @@ class Drip
     {
         throw new \Exception('Something went wrong!');
     }
+
+    /**
+     * Drip test credentials
+     */
+    public function verifyCredentials()
+    {
+        $response = $this->getLists();
+
+        if(!$response) {
+            return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
+
+        } else {
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+        }
+
+    }
 }
