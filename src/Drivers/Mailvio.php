@@ -167,7 +167,7 @@ class Mailvio
         $response = $this->getLists();
 
         if(!$response) {
-            return json_encode(['error' => 1, 'message' => 'Api key is not valid']);
+            return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
 
         } else {
             return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);

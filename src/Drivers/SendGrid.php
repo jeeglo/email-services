@@ -154,7 +154,7 @@ class SendGrid
         $response = json_decode($response);
 
         if(isset($response->errors)) {
-            return json_encode(['error' => 1, 'message' => 'Api key not valid']);
+            return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
 
         } else {
             return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
