@@ -159,4 +159,20 @@ class Mailvio
         return $response;
     }
 
+    /**
+     * Mailvio test credentials
+     */
+    public function verifyCredentials()
+    {
+        $response = $this->getLists();
+
+        if(!$response) {
+            return json_encode(['error' => 1, 'message' => 'Api key is not valid']);
+
+        } else {
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+        }
+
+    }
+
 }

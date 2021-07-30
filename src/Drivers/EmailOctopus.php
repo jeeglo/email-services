@@ -141,4 +141,21 @@ class EmailOctopus
             
         return $response;  
     }
+
+    /**
+     * Email Octopus test credentials
+     */
+    public function verifyCredentials()
+    {
+        $response = $this->curl('lists');
+
+        $response = json_decode($response);
+
+        if(isset($response->error) && $response->error) {
+            return json_encode(['error' => 1, 'message' => $response->error->message]);
+
+        } else {
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded']);
+        }
+    }
 }

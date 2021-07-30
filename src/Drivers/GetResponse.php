@@ -109,4 +109,21 @@ class GetResponse
     {
         throw new \Exception('Something went wrong!');
     }
+
+    /**
+     * Mailer lite test credentials
+     */
+    public function verifyCredentials()
+    {
+
+        $responce = $this->getResponse->getCampaigns();
+
+        if(isset($responce->httpStatus) && $responce->httpStatus === 400) {
+            return json_encode(['error' => 1, 'message' => $responce->codeDescription]);
+
+        } else {
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+        }
+
+    }
 }

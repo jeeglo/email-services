@@ -109,4 +109,20 @@ class Mailerlite
     {
         throw new \Exception('Something went wrong!');
     }
+
+    /**
+     * Mailer lite test credentials
+     */
+    public function verifyCredentials()
+    {
+        $response = $this->mailerlite->groups()->orderBy('name', 'ASC')->get();
+
+       if(isset($response[0]->error)) {
+           return json_encode(['error' => 1, 'message' => $response[0]->error->message]);
+
+       } else {
+           return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+       }
+
+    }
 }

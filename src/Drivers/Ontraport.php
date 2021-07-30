@@ -152,4 +152,24 @@ class Ontraport
     {
         throw new \Exception("Something went wrong !");
     }
+
+    /**
+     * Ontraport test credentials
+     */
+    public function verifyCredentials()
+    {
+
+        $requestParams = array(
+            "objectID"   => ObjectType::TAG, // Object type ID: 14
+        );
+
+        $response = json_decode($this->ontraport->object()->retrieveMultiple($requestParams));
+
+        if(!$response) {
+            return print_r(['error' => 1, 'message' => 'Api key not valid']);
+
+        } else {
+            return print_r(['error' => 0, 'message' => 'Connection succeeded.']);
+        }
+    }
 }

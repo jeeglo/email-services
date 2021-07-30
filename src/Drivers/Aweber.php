@@ -144,4 +144,18 @@ class Aweber
     {
         throw new \Exception('Something went wrong!');
     }
+
+    /**
+     * Aweber test credentials
+     */
+    public function verifyCredentials()
+    {
+        try {
+            $lists = $this->aweber->getAccount($this->access_token, $this->access_token_secret);
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+
+        } catch (\Exception $e) {
+            return json_encode(['error' => 1, 'message' => $e->getMessage()]);
+        }
+    }
 }

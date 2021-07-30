@@ -178,4 +178,13 @@ class EmailService {
     {
         return $this->driver->regenrateAccessToken($refresh_token);
     }
+
+    /**
+     * Verify test credentials
+     * @return false|string|void
+     */
+    public function verifyCredentials()
+    {
+        return $this->driver->verifyCredentials();
+    }
 }
