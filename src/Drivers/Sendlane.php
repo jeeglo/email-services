@@ -28,6 +28,7 @@ class Sendlane
             $lists = $this->apiCall('lists', [ 'limit' => 1000 ]);
 
             return $this->response($lists, 'list');
+
         } catch (Exception $e) {
            throw new \Exception($e->getMessage());
         }
@@ -135,7 +136,6 @@ class Sendlane
         } catch (Exception $e) {
             throw new \Exception($e->getMessage());
         }
-
         return $response;
     }
 
@@ -198,15 +198,20 @@ class Sendlane
      */
     public function verifyCredentials()
     {
-        $response = $this->getLists();
+        $lists = $this->apiCall('lists', ['limit' => 1000]);
 
-        $response = json_decode($response);
+        $response = json_decode(json_encode($lists), true);
 
-        if(isset($response->errors)) {
-            return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
+        if ($response) {
+            if (isset($response['error']['401'])) {
+                return json_encode(['error' => 1, 'message' => $response['error']['401']]);
 
-        } else {
-            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+            } else {
+                return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+            }
+        }else{
+
+            return json_encode(['error' => 0, 'message' => 'Connection was failed, please check your keys.']);
         }
     }
 }
