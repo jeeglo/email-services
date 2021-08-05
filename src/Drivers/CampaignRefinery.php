@@ -205,4 +205,23 @@ class CampaignRefinery
     {
         return ['success' => 1];
     }
+
+    /**
+     * CampaignRefinery test credentials
+     */
+    public function verifyCredentials()
+    {
+
+        $response = $this->curl('forms/get-forms');
+
+        $response = json_decode($response, TRUE);
+
+        if (isset($response['error'])) {
+            return json_encode(['error' => 1, 'message' => $response['error']]);
+
+        } else {
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+
+        }
+    }
 }

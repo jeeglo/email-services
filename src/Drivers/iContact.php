@@ -117,14 +117,13 @@ class iContact
      */
     public function verifyCredentials()
     {
-        $response = $this->iContact->getLists();
-
-        if(!$response) {
-            return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
-
-        } else {
+        try {
+            $this->getLists();
             return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
-        }
 
+        }catch (\Exception $e) {
+            return json_encode(['error' => 1, 'message' => $e->getMessage()]);
+
+        }
     }
 }
