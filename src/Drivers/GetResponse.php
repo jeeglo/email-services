@@ -111,15 +111,17 @@ class GetResponse
     }
 
     /**
-     * Mailer lite test credentials
+     * GetResponse  test credentials
      */
     public function verifyCredentials()
     {
 
-        $responce = $this->getResponse->getCampaigns();
+        $response = $this->getResponse->getCampaigns();
 
-        if(isset($responce->httpStatus) && $responce->httpStatus === 400) {
-            return json_encode(['error' => 1, 'message' => $responce->codeDescription]);
+        $response = json_decode(json_encode($response), true);
+
+        if(isset($response['httpStatus']) && ($response['httpStatus'] === 400 || $response['httpStatus'] === 401 )) {
+            return json_encode(['error' => 1, 'message' => $response['codeDescription']]);
 
         } else {
             return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);

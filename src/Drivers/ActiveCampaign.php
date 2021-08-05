@@ -182,4 +182,21 @@ class ActiveCampaign
     {
         throw new \Exception('Something went wrong!');
     }
+
+    /**
+     * ActiveCampaign test credentials
+     */
+    public function verifyCredentials()
+    {
+        $data = ['ids' => 'all'];
+        $response = $lists['lists'] = $this->activeCampaign->api("list/list", $data);
+
+        if (isset($response->http_code) && $response->http_code === 200) {
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+
+        } else {
+            return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
+
+        }
+    }
 }

@@ -166,10 +166,10 @@ class Ontraport
         $response = json_decode($this->ontraport->object()->retrieveMultiple($requestParams));
 
         if(!$response) {
-            return print_r(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
+            return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
 
         } else {
-            return print_r(['error' => 0, 'message' => 'Connection succeeded.']);
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
         }
     }
 }
