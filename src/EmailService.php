@@ -22,6 +22,7 @@ use Jeeglo\EmailService\Drivers\Moosend as Moosend;
 use Jeeglo\EmailService\Drivers\Mautic as Mautic;
 use Jeeglo\EmailService\Drivers\CampaignRefinery;
 use Jeeglo\EmailService\Drivers\SendGrid;
+use Jeeglo\EmailService\Drivers\AweberOauth2 as AweberOauth2;
 
 class EmailService {
 
@@ -30,9 +31,17 @@ class EmailService {
 	public function __construct($service, $credentials = []) {
 
     	switch ($service) {
-    		case 'aweber':
+
+            case 'aweber':
+
                 $this->driver = new Aweber($credentials);
                 break;
+
+            case 'aweberOauth2':
+
+                $this->driver = new AweberOauth2($credentials);
+                break;
+
 
             case 'activeCampaign':
                 $this->driver = new ActiveCampaign($credentials);

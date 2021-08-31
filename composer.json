@@ -3,7 +3,7 @@
 	"description": "Uniform SDK to integrate with popular marketing email services.",
 	"type": "Library",
 	"license": "MIT",
-	"version": "1.0.21",
+	"version": "1.0.22",
 	"autoload": {
 		"psr-4": {
 			"Jeeglo\\EmailService\\": "src"
@@ -12,7 +12,6 @@
 	"require": {
 		"drewm/mailchimp-api": "2.4",
 		"activecampaign/api-php": "2.0.2",
-		"getresponse/getresponse": "0.0.2",
 		"mizanur/icontact-api-php": "2.2",
 		"mailerlite/mailerlite-api-v2-php-sdk": "0.2.1",
 		"drewm/drip": "0.7",
@@ -20,6 +19,8 @@
 		"aweber/aweber": "1.1.18",
 		"ontraport/sdk-php": "*",
 		"infusionsoft/php-sdk": "1.4.*",
-		"mautic/api-library": "^2.16"
+		"mautic/api-library": "^2.16",
+		"league/oauth2-client": "^2.6",
+		"getresponse/sdk-php": "2.0.0"
 	}
 }
