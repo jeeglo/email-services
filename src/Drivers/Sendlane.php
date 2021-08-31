@@ -211,7 +211,7 @@ class Sendlane
             }
         }else{
 
-            return json_encode(['error' => 0, 'message' => 'Connection was failed, please check your keys.']);
+            return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
         }
     }
 }
