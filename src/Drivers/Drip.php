@@ -17,20 +17,30 @@ class Drip
         $this->account_id = $credentials['account_id'];
         
         $this->drip = new DripApi($this->api_token, $this->account_id);
-    }   
+    }
 
     /**
      * [getLists Fetch List through API]
-     * @return array
+     * @return array | boolean
+     * @throws \Exception
      */
-    public function getLists()
+    public function getLists($isCallFromVerifyCredentials = false)
     {
         try {
-             $lists['lists'] = $this->drip->get('campaigns')->campaigns;
+            $response = $this->drip->get('campaigns')->campaigns;
+
+            // if call from verify credentials method and the respponse is not false it means the credentials are valid then we need to return true
+            if($isCallFromVerifyCredentials) {
+                if($response !== false) {
+                    return true;
+                }
+            }
+
+            $lists['lists'] = $response;
 
             return $this->response($lists);
-        } catch (Exception $e) {
-           throw new \Exception($e->getMessage());
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
         }
     }
 
@@ -176,7 +186,7 @@ class Drip
      */
     public function verifyCredentials()
     {
-        $response = $this->getLists();
+        $response = $this->getLists(true);
 
         if(!$response) {
             return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
