@@ -23,6 +23,7 @@ use Jeeglo\EmailService\Drivers\Mautic as Mautic;
 use Jeeglo\EmailService\Drivers\CampaignRefinery;
 use Jeeglo\EmailService\Drivers\SendGrid;
 use Jeeglo\EmailService\Drivers\AweberOauth2 as AweberOauth2;
+use Jeeglo\EmailService\Drivers\PlatformLy as PlatformLy;
 
 class EmailService {
 
@@ -121,6 +122,10 @@ class EmailService {
 
             case 'sendGrid':
                 $this->driver = new SendGrid($credentials);
+                break;
+
+            case 'platformLy':
+                $this->driver = new PlatformLy($credentials);
                 break;
 
             default:
