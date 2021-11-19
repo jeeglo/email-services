@@ -11,52 +11,34 @@ class Mailvio
     public function __construct($credentials)
     {
         $this->api_key = $credentials['api_key'];
-        $this->api_url = "https://api.mailvio.com/v3/";
+        $this->api_url = "https://apiv2.mailvio.com/";
     }
 
     public function getLists()
     {
-        $all_lists = [];
-        $response_lists = [];
-        $limit = 50;
-        $offset = 0;
-
         try {
-            $resp = $this->curl('contacts/lists', ['offset' => $offset, 'limit' => $limit],'GET');
-            $data = json_decode($resp, true);
-
+            $resp = $this->curl('group');
+            $lists_data = json_decode($resp, true);
             // Getting count if count node is set
-            $count = (isset($data['count']) ? $data['count'] : 0);
-            $total_fetched_records = (isset($data['lists']) ? count($data['lists']) : 0);
+            $count = (isset($lists_data['countTotal']) ? $lists_data['countTotal'] : 0);
 
             // Check if the count is great than 0
             if($count > 0) {
 
-                // set the current lists result
-                $all_lists[] = $data['lists'];
-
-                // Check if total records is great than limit
-                if($count > $limit)
-                {
-                    do {
-                        $offset += $limit;
-                        $resp = $this->curl('contacts/lists', ['offset' => $offset, 'limit' => $limit],'GET');
-                        $data = json_decode($resp, true);
-                        $all_lists[] = $data['lists'];
-                        $total_fetched_records += count($data['lists']);
-                    } while($total_fetched_records !== $count);
-                }
-
-                // Set the data in array
-                foreach ($all_lists as $lists) {
-                    foreach ( $lists as $list) {
-                        $response_lists[] = array(
-                            'name' => $list['name'],
-                            'id' => $list['id']
+                $lists = [];
+                if (isset($lists_data['Groups'])) {
+                    foreach ($lists_data['Groups'] as $data) {
+                        $lists[] = array(
+                            'name' => $data['groupName'],
+                            'id' => $data['id']
                         );
                     }
+                    return $lists;
+
+                } else {
+                    return $this->failedResponse();
                 }
-                return $response_lists;
+
             } else {
                 return ['error' => true];
             }
@@ -76,16 +58,12 @@ class Mailvio
         try {
             // set param fields
             $contact = array(
-                'email' => $data['email'],
-                'attributes' => [
-                    'FIRSTNAME' => isset($data['first_name']) ? $data['first_name'] : '',
-                    'LASTNAME'  => isset($data['last_name']) ? $data['last_name'] : '',
-                ],
-                'listIds' => [ intval($data['list_id'])],
+                "emailAddress" => $data['email']
             );
 
             // send curl request
-            $response =  $this->curl('contacts',$contact,"POST");
+            $this->curl('group/'.$data['list_id'].'/subscriber',$contact,"POST");
+
             return $this->successResponse();
 
         } catch (Exception $e) {
@@ -120,22 +98,15 @@ class Mailvio
         throw new \Exception('Something went wrong!');
     }
 
-    /**
-     * Request Method
-     * @return array for getList
-     * @return array for addContact
-     */
-    private function curl($api_method, $data = [], $method = 'GET', $headers = [])
+
+    private function curl($api_method, $data = [],$method = 'GET', $headers = [])
     {
         $url = $this->api_url.$api_method;
+
         $curl = curl_init($url);
-        $offset = isset( $data['offset']) ? $data['offset'] : '';
-        $limit = isset( $data['limit']) ? $data['limit'] : '';
-        if($method == 'GET')
-        {
+        if($method == 'GET') {
             curl_setopt_array($curl, array(
                 CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_URL => $url."?limit=".$limit."&offset=".$offset,
             ));
         }
 
@@ -143,7 +114,7 @@ class Mailvio
 
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
             'Content-Type: application/json',
-            'api-key:'.$this->api_key,
+            'x-access-token:'.$this->api_key,
         ));
 
         if($method == 'POST')
@@ -151,9 +122,9 @@ class Mailvio
             curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
         }
 
-        // execute Curl
+
         $response = curl_exec($curl);
-        // close the connection of Curl
+
         curl_close($curl);
 
         return $response;
