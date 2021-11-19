@@ -20,3 +20,4 @@ This library provides a uniform way to integrate with several email services. Cu
 - Moosend
 - Campaign Refinery
 - SendGrid
+- Platform.Ly

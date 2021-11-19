@@ -54,7 +54,7 @@ class PlatformLy
             $params = array(
                 'api_key' => $this->api_key,
                 'action' => 'list_tags',
-                'value' => ["project_id" => $data['projectId']]
+                'value' => ["project_id" => $data['list_id']]
             );
 
             $tags['tags'] = $this->curl($params);
@@ -124,7 +124,7 @@ class PlatformLy
                 'api_key' => $this->api_key,
                 'action' => 'add_contact',
                 'value' => [
-                    "project_id" => $data['projectId'],
+                    "project_id" => $data['list_id'],
                     "email" => $data['email'],
                     'first_name' => (isset($data['first_name']) ? $data['first_name'] : null),
                     'last_name' => (isset($data['last_name']) ? $data['last_name'] : null)
