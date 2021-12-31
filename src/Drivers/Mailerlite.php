@@ -50,7 +50,10 @@ class Mailerlite
             $subscriber = [
                 'type' => 'subscribed',
                 'email' => $data['email'],
-                'name' => (isset($data['first_name']) ? $data['first_name'] : null) .' '. (isset($data['last_name']) ? $data['last_name'] : null )
+                'name' => (isset($data['first_name']) ? $data['first_name'] : null),
+                'fields' => [
+                    'last_name' => (isset($data['last_name']) ? $data['last_name'] : null)
+                ]
             ];
 
             $result = $this->mailerlite->groups()->addSubscriber($list_id, $subscriber);    
