@@ -8,6 +8,7 @@ use Jeeglo\EmailService\Drivers\iContact as iContact;
 use Jeeglo\EmailService\Drivers\Mailerlite as Mailerlite;
 use Jeeglo\EmailService\Drivers\Mailvio as Mailvio;
 use Jeeglo\EmailService\Drivers\SendFox as SendFox;
+use Jeeglo\EmailService\Drivers\SendInBlue;
 use Jeeglo\EmailService\Drivers\Sendlane as Sendlane;
 use Jeeglo\EmailService\Drivers\ConvertKit as ConvertKit;
 use Jeeglo\EmailService\Drivers\Drip as Drip;
@@ -126,6 +127,10 @@ class EmailService {
 
             case 'platformLy':
                 $this->driver = new PlatformLy($credentials);
+                break;
+
+            case 'sendInBlue':
+                $this->driver = new SendInBlue($credentials);
                 break;
 
             default:
