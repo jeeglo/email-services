@@ -21,6 +21,7 @@
 		"infusionsoft/php-sdk": "1.4.*",
 		"mautic/api-library": "^2.16",
 		"league/oauth2-client": "^2.6",
-		"getresponse/sdk-php": "2.0.0"
+		"getresponse/sdk-php": "2.0.0",
+		"sendinblue/api-v3-sdk": "8.x.x"
 	}
 }
