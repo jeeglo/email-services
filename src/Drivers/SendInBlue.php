@@ -1,6 +1,11 @@
 <?php
 
 namespace Jeeglo\EmailService\Drivers;
+use SendinBlue\Client\Api as SendInBlueApi;
+use GuzzleHttp\Client as SendInBlueGuzzleClient;
+use SendinBlue\Client\Configuration;
+use SendinBlue\Client\Model as SendInBlueModel;
+use SendinBlue\Client\ApiException;
 
 class SendInBlue
 {
@@ -26,24 +31,23 @@ class SendInBlue
      */
     public function getLists()
     {
-        require_once(__DIR__ . '/vendor/autoload.php');
 
         // Configure API key authorization: api-key
-        $config = SendinBlue\Client\Configuration::getDefaultConfiguration()->setApiKey('api-key', $this->api_key);
+        $config = Configuration::getDefaultConfiguration()->setApiKey('api-key', $this->api_key);
 
         // Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
         // $config = SendinBlue\Client\Configuration::getDefaultConfiguration()->setApiKeyPrefix('api-key', 'Bearer');
 
         // Configure API key authorization: partner-key
-        $config = SendinBlue\Client\Configuration::getDefaultConfiguration()->setApiKey('partner-key', $this->api_key);
+        $config = Configuration::getDefaultConfiguration()->setApiKey('partner-key', $this->api_key);
 
         // Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
         // $config = SendinBlue\Client\Configuration::getDefaultConfiguration()->setApiKeyPrefix('partner-key', 'Bearer');
 
-        $apiInstance = new SendinBlue\Client\Api\ContactsApi(
+        $apiInstance = new SendInBlueApi\ContactsApi(
         // If you want use custom http client, pass your client which implements `GuzzleHttp\ClientInterface`.
         // This is optional, `GuzzleHttp\Client` will be used as default.
-        new GuzzleHttp\Client(),
+            new SendInBlueGuzzleClient(),
             $config
         );
 
@@ -70,6 +74,8 @@ class SendInBlue
             }
         } catch (Exception $e) {
             throw new \Exception($e->getMessage());
+        } catch (ApiException $e) {
+            return ['error' => new ApiException($e->getMessage())];
         }
 
     }
@@ -81,17 +87,15 @@ class SendInBlue
      */
     public function addContact($data)
     {
-        require_once(__DIR__ . '/vendor/autoload.php');
+        $config = Configuration::getDefaultConfiguration()->setApiKey('api-key', $this->api_key);
 
-        $config = SendinBlue\Client\Configuration::getDefaultConfiguration()->setApiKey('api-key', $this->api_key);
-
-        $apiInstance = new SendinBlue\Client\Api\ContactsApi(
-            new GuzzleHttp\Client(),
+        $apiInstance = new SendInBlueApi\ContactsApi(
+            new SendInBlueGuzzleClient(),
             $config
         );
-        $createContact = new \SendinBlue\Client\Model\CreateContact(); // Values to create a contact
+        $createContact = new SendInBlueModel\CreateContact(); // Values to create a contact
         $createContact['email'] = $data['email'];
-        $createContact['listIds'] = [$data['list_id']];
+        $createContact['listIds'] = [intval($data['list_id'])];
         $createContact['attributes'] = [
             'FIRSTNAME' => isset($data['first_name']) ? $data['first_name'] : null,
             'LASTNAME' => isset($data['last_name']) ? $data['last_name'] : null,
