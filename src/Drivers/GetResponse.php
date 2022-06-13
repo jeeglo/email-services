@@ -74,7 +74,10 @@ class GetResponse
                         $contact_id = $response->getData()[0]['contactId'];
 
                         $updateContact = new ModelUpdateContact();
-                        $updateContact->setName($name);
+                        
+                        if (strlen(trim($name)) > 0) {
+                            $updateContact->setName($name);
+                        }
 
                         $updateContactOperation = new UpdateContact($updateContact, $contact_id);
                         $this->sync($updateContact, $add_tags, $remove_tags);
@@ -100,7 +103,9 @@ class GetResponse
                     $data['email']
                 );
 
-                $newContact->setName($name);
+                if (strlen(trim($name)) > 0) {
+                    $newContact->setName($name);
+                }
 
                 // Set tags
                 $this->sync($newContact, $add_tags, $remove_tags);
