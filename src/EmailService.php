@@ -18,7 +18,7 @@ use Jeeglo\EmailService\Drivers\Kyvio as Kyvio;
 use Jeeglo\EmailService\Drivers\Ontraport as Ontraport;
 use Jeeglo\EmailService\Drivers\EmailOctopus as EmailOctopus;
 use Jeeglo\EmailService\Drivers\Sendiio as Sendiio;
-use Jeeglo\EmailService\Drivers\Infusionsoft as Infusionsoft;
+// use Jeeglo\EmailService\Drivers\Infusionsoft as Infusionsoft;
 use Jeeglo\EmailService\Drivers\Moosend as Moosend;
 use Jeeglo\EmailService\Drivers\Mautic as Mautic;
 use Jeeglo\EmailService\Drivers\CampaignRefinery;
@@ -101,9 +101,9 @@ class EmailService {
                 $this->driver = new Mailvio($credentials);
                 break;
 
-            case 'infusionsoft':
-                $this->driver = new Infusionsoft($credentials);
-                break;
+            // case 'infusionsoft':
+                // $this->driver = new Infusionsoft($credentials);
+                // break;
 
             case 'sendFox':
                 $this->driver = new SendFox($credentials);
