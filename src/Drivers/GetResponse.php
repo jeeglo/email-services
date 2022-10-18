@@ -1,5 +1,6 @@
 <?php
 namespace Jeeglo\EmailService\Drivers;
+use Getresponse\Sdk\Operation\Contacts\GetContact\GetContact;
 use Getresponse\Sdk\Operation\Contacts\GetContacts\GetContacts;
 use Getresponse\Sdk\Operation\Contacts\GetContacts\GetContactsSearchQuery;
 use Getresponse\Sdk\Operation\Campaigns\GetCampaigns\GetCampaigns;
@@ -20,6 +21,7 @@ class GetResponse
     protected $client;
     protected $domain;
     protected $api_url;
+    protected $contact_id = null;
 
     public function __construct($credentials)
     {
@@ -71,13 +73,35 @@ class GetResponse
 
                     if(isset($response->getData()[0]['contactId'])) {
 
-                        $contact_id = $response->getData()[0]['contactId'];
+                        $this->contact_id = $contact_id = $response->getData()[0]['contactId'];
+//                        echo '<pre>';
+//                        $getContactDetailsOperation = new GetContact($contact_id);
+//                        $getContactDetailsOperationResponse = $this->apiCall($getContactDetailsOperation);
+//                        $getContactDetailsOperationData = $getContactDetailsOperationResponse->getData();
+//
+////                        var_dump($add_tags);
+//                        if(!empty($getContactDetailsOperationData['tags'])) {
+//                            $existingTags = $getContactDetailsOperationData['tags'];
+//                            foreach ($existingTags as $tag) {
+//                                if(!in_array($tag['tagId'], $add_tags)) {
+//                                    $add_tags[] = $tag['tagId'];
+//                                }
+//                            }
+//
+//                        }
+
+//                        print_r('After');
+//                        print_r($add_tags); exit();
+
+//                        print_r($getContactDetailsOperationData); exit();
+//                        print_r($list[0]); exit();
 
                         $updateContact = new ModelUpdateContact();
-                        
+
                         if (strlen(trim($name)) > 0) {
                             $updateContact->setName($name);
                         }
+//                        $updateContact->setTags()
 
                         $updateContactOperation = new UpdateContact($updateContact, $contact_id);
                         $this->sync($updateContact, $add_tags, $remove_tags);
@@ -134,6 +158,11 @@ class GetResponse
      */
     public function sync($contactData, $add_tags, $remove_tags)
     {
+        if($this->contact_id) {
+            
+        }
+
+
         if(is_array($add_tags) && count($add_tags) > 0) {
 
             $contactData->setTags($add_tags);
