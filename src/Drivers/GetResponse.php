@@ -74,34 +74,12 @@ class GetResponse
                     if(isset($response->getData()[0]['contactId'])) {
 
                         $this->contact_id = $contact_id = $response->getData()[0]['contactId'];
-//                        echo '<pre>';
-//                        $getContactDetailsOperation = new GetContact($contact_id);
-//                        $getContactDetailsOperationResponse = $this->apiCall($getContactDetailsOperation);
-//                        $getContactDetailsOperationData = $getContactDetailsOperationResponse->getData();
-//
-////                        var_dump($add_tags);
-//                        if(!empty($getContactDetailsOperationData['tags'])) {
-//                            $existingTags = $getContactDetailsOperationData['tags'];
-//                            foreach ($existingTags as $tag) {
-//                                if(!in_array($tag['tagId'], $add_tags)) {
-//                                    $add_tags[] = $tag['tagId'];
-//                                }
-//                            }
-//
-//                        }
-
-//                        print_r('After');
-//                        print_r($add_tags); exit();
-
-//                        print_r($getContactDetailsOperationData); exit();
-//                        print_r($list[0]); exit();
 
                         $updateContact = new ModelUpdateContact();
 
                         if (strlen(trim($name)) > 0) {
                             $updateContact->setName($name);
                         }
-//                        $updateContact->setTags()
 
                         $updateContactOperation = new UpdateContact($updateContact, $contact_id);
                         $this->sync($updateContact, $add_tags, $remove_tags);
@@ -158,24 +136,42 @@ class GetResponse
      */
     public function sync($contactData, $add_tags, $remove_tags)
     {
+        // if the contact already exist
         if($this->contact_id) {
-            
+            // get the contact detail by id
+            $getContactDetailsOperation = new GetContact($this->contact_id);
+            // set API call instance
+            $getContactDetailsOperationResponse = $this->apiCall($getContactDetailsOperation);
+            // get response from API
+            $getContactDetailsOperationData = $getContactDetailsOperationResponse->getData();
+
+            // if we have tags in response then sync the tags according to add_tags and remove_tags array
+            if(!empty($getContactDetailsOperationData['tags'])) {
+                // get existing tags
+                $existingTags = $getContactDetailsOperationData['tags'];
+                // loop through existing tags
+                foreach ($existingTags as $tag) {
+                    // if the current tags is not our add_tags array the push it
+                    if(!in_array($tag['tagId'], $add_tags)) {
+                        $add_tags[] = $tag['tagId'];
+                    }
+                }
+            }
         }
 
-
+        // if we have data in add_tags array
         if(is_array($add_tags) && count($add_tags) > 0) {
 
-            $contactData->setTags($add_tags);
-        }
-
-        if(is_array($remove_tags) && count($remove_tags) > 0) {
-
-            foreach ($remove_tags as $remove_tag) {
-
-                $res = new DeleteTag(
-                    $remove_tag
-                );
+            // loop through the add_tags array to unset the tagIds we have in our remove_tags array
+            foreach ($add_tags as $key => $add_tag) {
+                if(in_array($add_tag, $remove_tags)) {
+                    // if we have found the match tagId from remove_tags array then unset it from add_tags array
+                    unset($add_tags[$key]);
+                }
             }
+
+            // set the tags in particular contact
+            $contactData->setTags($add_tags);
         }
     }
 
