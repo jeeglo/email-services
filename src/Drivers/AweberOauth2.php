@@ -198,18 +198,56 @@ class AweberOauth2
      */
     public function getLists()
     {
-
         $response = $this->genericCurlRequest($this->api_url, 'get', [], ['Authorization' => 'Bearer ' . $this->accessToken]);
         $response = json_decode($response, true);
 
         if (isset($response['entries'][0]['lists_collection_link'])) {
+
+            // Initialize the array
+            $lists_data = [];
+
+            // set the variable as fasle
+            $isLoadMore = false;
+
+            // set the lists fetch URL
             $listsUrl = $response['entries'][0]['lists_collection_link'];
-            $lists = $this->genericCurlRequest($listsUrl, 'get', [], ['Authorization' => 'Bearer ' . $this->accessToken]);
-            $lists_data['lists'] = json_decode($lists, true)['entries'];
+
+            // set the loop to get all the lists - by default 100 recv
+            do {
+                // call the lists get API
+                $lists = $this->genericCurlRequest($listsUrl, 'get', [], ['Authorization' => 'Bearer ' . $this->accessToken]);
+
+                // if found the list data
+                if($lists) {
+
+                    // decaode the response
+                    $decode_response = json_decode($lists, true);
+
+                    // if we have more lists to load then update the lists get API url
+                    if(isset($decode_response['next_collection_link'])) {
+
+                        $listsUrl = $decode_response['next_collection_link'];
+                        $isLoadMore = true;
+                    } else {
+                        $isLoadMore = false;
+                    }
+
+                    // if we found the lists
+                    if(isset($decode_response['entries'])) {
+                        // loop through the data
+                        foreach ($decode_response['entries'] as $list_entries) {
+                            // push the all the lists data to an array
+                            array_push($lists_data, $list_entries);
+                        }
+                    }
+                }
+
+            } while ($isLoadMore);
+
+            $lists_data['lists'] = $lists_data;
 
             return $this->response($lists_data);
         }
-
     }
 
     /**
@@ -269,7 +307,7 @@ class AweberOauth2
         ]);
         $accessToken = $token->getToken();
         $refreshToken = $token->getRefreshToken();
-        return ['access_token' => $accessToken,'redUrl'=>$_SESSION['redirect_url'],'refresh_token' => $refreshToken];
+        return ['access_token' => $accessToken,'redUrl'=> (isset($_SESSION['redirect_url']) ? $_SESSION['redirect_url'] : $this->redirect_url),'refresh_token' => $refreshToken];
     }
 
     /**
