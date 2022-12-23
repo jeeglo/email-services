@@ -1,6 +1,7 @@
 <?php
 
 namespace Jeeglo\EmailService;
+use Jeeglo\EmailService\Drivers\FunnelMates as FunnelMates;
 use Jeeglo\EmailService\Drivers\Mailchimp as Mailchimp;
 use Jeeglo\EmailService\Drivers\ActiveCampaign as ActiveCampaign;
 use Jeeglo\EmailService\Drivers\GetResponse as GetResponse;
@@ -131,6 +132,10 @@ class EmailService {
 
             case 'sendInBlue':
                 $this->driver = new SendInBlue($credentials);
+                break;
+
+            case 'funnelMates':
+                $this->driver = new FunnelMates($credentials);
                 break;
 
             default:
