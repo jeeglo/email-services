@@ -21,4 +21,4 @@ This library provides a uniform way to integrate with several email services. Cu
 - Campaign Refinery
 - SendGrid
 - Platform.Ly
-- Funnel Mates
+- FunnelMates
