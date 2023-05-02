@@ -26,6 +26,7 @@ use Jeeglo\EmailService\Drivers\CampaignRefinery;
 use Jeeglo\EmailService\Drivers\SendGrid;
 use Jeeglo\EmailService\Drivers\AweberOauth2 as AweberOauth2;
 use Jeeglo\EmailService\Drivers\PlatformLy as PlatformLy;
+use Jeeglo\EmailService\Drivers\Acumbamail as Acumbamail;
 
 class EmailService {
 
@@ -136,6 +137,10 @@ class EmailService {
 
             case 'funnelMates':
                 $this->driver = new FunnelMates($credentials);
+                break;
+
+            case 'acumbamail':
+                $this->driver = new Acumbamail($credentials);
                 break;
 
             default:
