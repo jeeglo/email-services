@@ -12,6 +12,7 @@ class Infusionsoft
     protected $refresh_token;
     protected $redirect_uri;
     protected $infusionsoft;
+    protected $api_url;
 
     public function __construct($credentials) {
 
@@ -39,6 +40,8 @@ class Infusionsoft
         // set new tokens from params to make calls to infusionsoft API's
         $token = new Token($token_params);
         $this->infusionsoft->setToken($token);
+
+        $this->api_url = 'https://api.infusionsoft.com/crm/rest/v1';
     }
 
     /**
@@ -47,9 +50,47 @@ class Infusionsoft
      */
     public function getTags() {
         try {
-            // Call the API to fetch the tags
-            $response = $this->infusionsoft->tags()->get()->toArray();
-            return $this->response($response);
+            // set the default as false
+            $isLoadMore = false;
+
+            // initialized the empty array
+            $tags_data = [];
+
+            // set the first request url
+            $url = $this->api_url.'/tags/?access_token='.$this->access_token.'&limit=1000&offset=0';
+
+            // do while loop to fetch all the tags - by default respnse contain 1000 per page record
+            do {
+                // call to API
+                $tags = $this->curlRequest($url);
+
+                // if we have tags data then check the next page is available and push the data to our initialized array variable
+                if(!empty($tags['tags'])) {
+
+                    // push the current call data in our defined variable
+                    foreach ($tags['tags'] as $tag) {
+                        array_push($tags_data, $tag);
+                    }
+
+                    // if the count is greater than 1000 then make another call with new next page URL
+                    if(isset($tags['count']) && $tags['count'] > 1000) {
+                        if(isset($tags['next'])) {
+                            // until we have next page or the tags data is not empty we need to loop through them to fetch all the tags
+                            $isLoadMore = true;
+                            $url = $tags['next'];
+                            // get query params from url to append the access token
+                            $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . 'access_token='.$this->access_token;
+                        }  else {
+                            $isLoadMore = false;
+                        }
+                    }
+                } else {
+                    // if the tags are empty we do not need to loop further so set the variable as false
+                    $isLoadMore = false;
+                }
+            } while ($isLoadMore);
+
+            return $this->response($tags_data);
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
@@ -204,21 +245,21 @@ class Infusionsoft
      * [response description]
      * @return  array [return response as key value]
      */
-    private function response($lists)
+    private function response($tags_data)
     {
         $response = [];
 
         try {
-            if(!empty($lists)) {
+            if(!empty($tags_data)) {
 
-                foreach ($lists as $offset => $list) {
+                foreach ($tags_data as $tag) {
                     $response[] = array(
-                        'name' => $list->name,
-                        'id' => $list->id
+                        'name' => $tag['name'],
+                        'id' => $tag['id']
                     );
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
 
@@ -255,5 +296,32 @@ class Infusionsoft
         } catch (\Exception $e) {
             return json_encode(['error' => 1, 'message' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Generic curl request for fetching all the tags via curl API call
+     * @param string
+     * @param array $data
+     * @return array|bool|mixed|string
+     */
+    function curlRequest($request_url)
+    {
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $request_url);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        $json = json_decode($response, true);
+
+        if (is_array($json)) {
+            return $json;
+        }
+
+        return $response;
     }
 }

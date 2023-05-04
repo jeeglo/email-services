@@ -31,7 +31,7 @@ class Acumbamail
             $endpoint = "getLists";
             $lists = $this->curlRequest($endpoint);
 
-            if(empty($lists) || !count($lists) ) {
+            if(empty($lists) || $lists === 'Unauthorized' ) {
                 return ['error' => true];
             }
 
@@ -84,10 +84,9 @@ class Acumbamail
      */
     public function verifyCredentials()
     {
-
         $response = $this->getLists();
 
-        if(empty($response)) {
+        if(isset($response['error']) && $response['error'] == true) {
             return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your Api Key.']);
 
         } else {
