@@ -3,7 +3,7 @@
 	"description": "Uniform SDK to integrate with popular marketing email services.",
 	"type": "library",
 	"license": "MIT",
-	"version": "1.0.33",
+	"version": "1.0.34",
 	"autoload": {
 		"psr-4": {
 			"Jeeglo\\EmailService\\": "src"
@@ -23,5 +23,10 @@
 		"league/oauth2-client": "^2.6",
 		"getresponse/sdk-php": "2.0.0",
 		"sendinblue/api-v3-sdk": "7.4.0"
+	},
+	"config": {
+		"allow-plugins": {
+			"php-http/discovery": false
+		}
 	}
 }
