@@ -105,11 +105,10 @@ class AweberOauth2
         } else {
 
             // Add new entry
-            $addTags = implode(',', $add_tags);
             $contactData = array(
                 'name' => (isset($data['first_name']) ? $data['first_name'] : null ). ' ' .(isset($data['last_name']) ? $data['last_name'] : null ),
                 'email' => $data['email'],
-                'tags' => [$addTags]
+                'tags' => $add_tags
             );
             try {
                 $body = $this->client->post($listsUrl, [
