@@ -27,6 +27,7 @@ use Jeeglo\EmailService\Drivers\SendGrid;
 use Jeeglo\EmailService\Drivers\AweberOauth2 as AweberOauth2;
 use Jeeglo\EmailService\Drivers\PlatformLy as PlatformLy;
 use Jeeglo\EmailService\Drivers\Acumbamail as Acumbamail;
+use Jeeglo\EmailService\Drivers\Vbout as Vbout;
 
 class EmailService {
 
@@ -141,6 +142,10 @@ class EmailService {
 
             case 'acumbamail':
                 $this->driver = new Acumbamail($credentials);
+                break;
+
+            case 'vbout':
+                $this->driver = new Vbout($credentials);
                 break;
 
             default:
