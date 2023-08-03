@@ -42,7 +42,7 @@ class Vbout
 
         try {
             if (isset($results['items']) && !empty($results['items'])) {
-                foreach ($results as $result) {
+                foreach ($results['items'] as $result) {
                     $response[] = array(
                         'id' => $result['id'],
                         'name' => $result['name']
