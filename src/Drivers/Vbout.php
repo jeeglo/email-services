@@ -98,10 +98,41 @@ class Vbout
                 'fields' => $fields_data
             );
 
-            $result = $this->vboutAPI->addNewContact($contact_data);
-            return $result;
+            // check if contact exist
+            $contact = $this->vboutAPI->searchContact($contact_data['email'], $contact_data['listid']);
+            if(!isset($contact['errorCode'])) {
+                // No error means we found the contact
+                if(isset($contact[0]['id'])) {
+                    // get the contact id
+                    $contact_data['id'] = $contact[0]['id'];
+                    return $this->vboutAPI->updateContact($contact_data);
+                }
+            } else {
+                // add new contact
+                return $this->vboutAPI->addNewContact($contact_data);
+            }
+
         } catch (\Exception $exception) {
             echo $exception->getMessage();
+        }
+    }
+
+    /**
+     * Vbout test credentials
+     */
+    public function verifyCredentials()
+    {
+        try {
+            $results = $this->vboutAPI->getMyLists();
+
+            if(isset($results['errorCode'])) {
+                return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
+            }
+
+            return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
+
+        } catch (\Exception $e) {
+            return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
         }
     }
 
