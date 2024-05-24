@@ -57,8 +57,8 @@ class GetResponse
             $getContactsOperation = new GetContacts();
             $searchQuery = new GetContactsSearchQuery();
             $searchQuery->whereEmail($data['email']);
+            $searchQuery->whereCampaignId($data['list_id']);
 
-            //@ todo search from list id
             $getContactsOperation->setQuery($searchQuery);
 
             $response = $this->apiCall($getContactsOperation);
