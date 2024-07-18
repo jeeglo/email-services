@@ -15,7 +15,7 @@ class Mailvio
     public function __construct($credentials)
     {
         $this->credentials = $credentials;
-        $this->access_token = $credentials['access_token'];
+        $this->access_token = (isset($credentials['access_token']) ? $credentials['access_token'] : null);
         $this->redirect_url = $credentials['redirect_uri'];
         $this->client_id = $credentials['client_id'];
         $this->api_url = "https://apiv2.mailvio.com/";
