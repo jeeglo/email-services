@@ -6,11 +6,18 @@ namespace Jeeglo\EmailService\Drivers;
 
 class Mailvio
 {
-    protected $api_key;
+    protected $access_token;
+    protected $redirect_url;
+    protected $client_id;
+    protected $credentials;
+    private $api_url;
 
     public function __construct($credentials)
     {
-        $this->api_key = $credentials['api_key'];
+        $this->credentials = $credentials;
+        $this->access_token = $credentials['access_token'];
+        $this->redirect_url = $credentials['redirect_uri'];
+        $this->client_id = $credentials['client_id'];
         $this->api_url = "https://apiv2.mailvio.com/";
     }
 
@@ -36,14 +43,14 @@ class Mailvio
                     return $lists;
 
                 } else {
-                    return $this->failedResponse();
+                    $this->failedResponse();
                 }
 
             } else {
                 return ['error' => true];
             }
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
 
@@ -58,7 +65,11 @@ class Mailvio
         try {
             // set param fields
             $contact = array(
-                "emailAddress" => $data['email']
+                "emailAddress" => $data['email'],
+                "customFields" => [
+                    'FIRSTNAME' => $data['first_name'],
+                    'LASTNAME' => $data['last_name']
+                ]
             );
 
             // send curl request
@@ -66,7 +77,7 @@ class Mailvio
 
             return $this->successResponse();
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }
@@ -114,7 +125,7 @@ class Mailvio
 
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
             'Content-Type: application/json',
-            'x-access-token:'.$this->api_key,
+            'x-access-token:'.$this->access_token,
         ));
 
         if($method == 'POST')
@@ -128,6 +139,79 @@ class Mailvio
         curl_close($curl);
 
         return $response;
+    }
+
+    /**
+     * Call to Email service and get OAuth Url
+     * @return [array]
+     */
+    public function connect()
+    {
+        // Make Call to Mailvio and return OAuth Url
+        return ['url' => "https://mail.mailvio.com/oauth2/authorise?response_type=code&appid=$this->client_id&redirect_uri=$this->redirect_url"];
+    }
+
+    /**
+     * Get response from Email Service after user Allow access to our application
+     * @return [array]
+     * @throws \Exception
+     */
+    public function getConnectData()
+    {
+        // If user has successfully allowed access to our application then we have code on callback
+        if (isset($_GET['code'])) {
+
+            try {
+                $this->credentials['grant_type'] = 'authorization_code';
+                $this->credentials['code'] = $_GET['code'];
+
+                // Get Access token from OAuth
+                $response = $this->curl('api/oauth/token', $this->credentials, $method = 'POST', $headers = []);
+
+                $accessToken = null;
+                if($response) {
+                    $response = json_decode($response, true);
+                    $accessToken = (isset( $response['access_token']) ?  $response['access_token'] : null);
+                }
+
+
+                // return access token
+                return ['access_token' => $accessToken];
+
+            } catch (\Exception $ex) {
+                throw new \Exception($ex->getMessage());
+            }
+
+        } else {
+            // if no code found in Parameter, return failed response
+            $this->failedResponse();
+        }
+    }
+
+    public function getTags()
+    {
+        try {
+            $resp = $this->curl('tags');
+
+            if($resp) {
+
+                $tags_data = json_decode($resp, true);
+
+                $tags = [];
+                foreach ($tags_data as $data) {
+                    $tags[] = array(
+                        'name' => $data['tagName'],
+                        'id' => $data['id']
+                    );
+                }
+
+                return $tags;
+            }
+
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+
     }
 
     /**
