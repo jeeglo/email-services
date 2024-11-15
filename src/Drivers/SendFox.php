@@ -24,35 +24,40 @@ class SendFox
     public function getLists()
     {
         $lists = [];
-        $limit = 10000;
-        $offset = 0;
+        $page = 1; // Start with the first page
 
         try {
-            // Send curl call to get the lists
-            $response = $this->curl('lists', ['offset' => $offset, 'limit' => $limit],'GET');
+            while (true) {
+                // Send curl call to get the current page of lists
+                $response = $this->curl('lists', ['page' => $page, 'limit' => 10], 'GET');
 
-            // Decoded the json response
-            $lists_data = json_decode($response, true);
+                // Decode the JSON response
+                $listsData = json_decode($response, true);
 
-            // if we found the lists data then we need to make the response data
-            if(is_array($lists_data) && count($lists_data) > 0) {
-                if(isset($lists_data['data'])) {
-                    foreach ($lists_data['data'] as $data) {
-                        $lists[] = array(
+                // Check if we received valid data
+                if (is_array($listsData) && isset($listsData['data'])) {
+                    // Append the fetched lists to the main $lists array
+                    foreach ($listsData['data'] as $data) {
+                        $lists[] = [
                             'name' => $data['name'],
                             'id' => $data['id']
-                        );
+                        ];
+                    }
+
+                    // Check if there's a next page
+                    if (isset($listsData['next_page_url']) && $listsData['next_page_url'] !== null) {
+                        $page++;
+                    } else {
+                        // No more pages, exit the loop
+                        break;
                     }
                 } else {
-                    return ['error' => true];
+                    // If no valid data is returned, exit the loop
+                    break;
                 }
-
-                // return the lists data
-                return $lists;
-
-            } else {
-                return ['error' => true];
             }
+
+            return $lists;
 
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
@@ -124,8 +129,6 @@ class SendFox
     {
         // Set the API call url
         $url = $this->api_url.$api_method;
-        $offset = isset( $data['offset']) ? $data['offset'] : '';
-        $limit = isset( $data['limit']) ? $data['limit'] : '';
 
         // Initialize curl
         $curl = curl_init($url);
@@ -142,7 +145,7 @@ class SendFox
         if($method == 'GET')
         {
             curl_setopt_array($curl, array(
-                CURLOPT_URL => $url."?limit=.'$limit'.&offset=".$offset,
+                CURLOPT_URL => $url . '?' . http_build_query($data),
             ));
         }
 
