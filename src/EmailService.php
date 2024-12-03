@@ -2,6 +2,7 @@
 
 namespace Jeeglo\EmailService;
 use Jeeglo\EmailService\Drivers\FunnelMates as FunnelMates;
+use Jeeglo\EmailService\Drivers\Grawt;
 use Jeeglo\EmailService\Drivers\Mailchimp as Mailchimp;
 use Jeeglo\EmailService\Drivers\ActiveCampaign as ActiveCampaign;
 use Jeeglo\EmailService\Drivers\GetResponse as GetResponse;
@@ -146,6 +147,10 @@ class EmailService {
 
             case 'vbout':
                 $this->driver = new Vbout($credentials);
+                break;
+
+            case 'grawt':
+                $this->driver = new Grawt($credentials);
                 break;
 
             default:
