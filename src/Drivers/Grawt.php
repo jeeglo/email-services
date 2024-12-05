@@ -3,7 +3,6 @@
 
 namespace Jeeglo\EmailService\Drivers;
 
-
 class Grawt
 {
     protected $api_key;
@@ -21,7 +20,7 @@ class Grawt
 
     /**
      * [addContact Add contact to list through API]
-     * @return array [return success or fail]
+     * @return void [return success or fail]
      */
     public function addContact($data, $remove_tags = [], $add_tags = [])
     {
@@ -32,13 +31,23 @@ class Grawt
                 "fields" => [
                     'first_name' => $data['first_name'],
                     'last_name' => $data['last_name']
-                ]
+                ],
+                'add_tags' => $add_tags,
+                'remove_tags' => $remove_tags
             );
 
             // send curl request
-            return $this->curl('leads/sync',$contact,"POST");
+            $response = $this->curl('leads/sync',$contact,"POST");
 
-            return $this->successResponse();
+            if($response) {
+                $decoded_response = json_decode($response, true);
+
+                if(isset($decoded_response['success'])) {
+                    return $this->successResponse();
+                }
+
+                return $this->failedResponse();
+            }
 
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
@@ -63,12 +72,19 @@ class Grawt
         throw new \Exception('Something went wrong!');
     }
 
-
+    /**
+     * Generic method for API calls
+     * @param $api_method
+     * @param array $data
+     * @param string $method
+     * @param array $headers
+     * @return bool|string
+     * @throws \Exception
+     */
     private function curl($api_method, $data = [], $method = 'GET', $headers = [])
     {
         $url = $this->api_url . $api_method;
 
-        echo $url;
         // Append query parameters for GET requests
         if ($method === 'GET' && !empty($data)) {
             $url .= '?' . http_build_query($data);
@@ -103,6 +119,11 @@ class Grawt
         return $response;
     }
 
+    /**
+     * Get tags
+     * @return array
+     * @throws \Exception
+     */
     public function getTags()
     {
         try {
@@ -113,11 +134,14 @@ class Grawt
                 $tags_data = json_decode($resp, true);
 
                 $tags = [];
-                foreach ($tags_data as $data) {
-                    $tags[] = array(
-                        'name' => $data['tagName'],
-                        'id' => $data['id']
-                    );
+                if(isset($tags_data['tags'])) {
+
+                    foreach ($tags_data['tags'] as $data) {
+                        $tags[] = array(
+                            'name' => $data['name'],
+                            'id' => $data['id']
+                        );
+                    }
                 }
 
                 return $tags;
