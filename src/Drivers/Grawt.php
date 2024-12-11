@@ -133,8 +133,12 @@ class Grawt
 
                 $tags_data = json_decode($resp, true);
 
+                if(isset($tags_data['error'])) {
+                    return ['error' => true, 'message' => $tags_data['error']];
+                }
+
                 $tags = [];
-                if(isset($tags_data['tags'])) {
+                if(isset($tags_data['tags']) && !empty($tags_data['tags'])) {
 
                     foreach ($tags_data['tags'] as $data) {
                         $tags[] = array(
@@ -160,7 +164,7 @@ class Grawt
     {
         $response = $this->getTags();
 
-        if(!$response) {
+        if(isset($response['error'])) {
             return json_encode(['error' => 1, 'message' => 'Connection was failed, please check your keys.']);
 
         } else {
@@ -168,5 +172,4 @@ class Grawt
         }
 
     }
-
 }
