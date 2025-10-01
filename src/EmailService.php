@@ -2,6 +2,7 @@
 
 namespace Jeeglo\EmailService;
 use Jeeglo\EmailService\Drivers\FunnelMates as FunnelMates;
+use Jeeglo\EmailService\Drivers\GoHighLevel;
 use Jeeglo\EmailService\Drivers\Grawt;
 use Jeeglo\EmailService\Drivers\Mailchimp as Mailchimp;
 use Jeeglo\EmailService\Drivers\ActiveCampaign as ActiveCampaign;
@@ -151,6 +152,10 @@ class EmailService {
 
             case 'grawt':
                 $this->driver = new Grawt($credentials);
+                break;
+
+            case 'goHighLevel':
+                $this->driver = new GoHighLevel($credentials);
                 break;
 
             default:
