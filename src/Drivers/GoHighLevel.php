@@ -10,6 +10,7 @@ class GoHighLevel
     protected $client_secret;
     protected $redirect_url;
     protected $access_token;
+    protected $location_id;
     protected $base_url = "https://services.leadconnectorhq.com";
 
     public function __construct($credentials)
@@ -18,6 +19,7 @@ class GoHighLevel
         $this->client_secret = $credentials['client_secret'];
         $this->redirect_url  = $credentials['redirect_url'];
         $this->access_token  = $credentials['access_token'] ?? null;
+        $this->location_id  = $credentials['location_id'] ?? null;
     }
 
     /**
@@ -63,26 +65,19 @@ class GoHighLevel
                 'redirect_uri'  => $this->redirect_url,
             ], false, null, true);
 
-            print_r('Getting token below is the response');
-            print_r($response);
             $accessToken = $response['access_token'] ?? null;
 
             if (!$accessToken) {
                 throw new Exception("No access token returned.");
             }
 
-//            // Fetch locations
-//            $profile = $this->curl("/users/profile", "GET", [], true, $accessToken);
-//            $locations = $profile['locations'] ?? [];
-
             return [
                 'access_token' => $accessToken,
                 'refresh_token' => $response['refresh_token'] ?? null,
-//                'locations' => $locations
+                'location_id' => $response['locationId'] ?? null
             ];
 
         } catch (Exception $e) {
-            print_r($e->getMessage());
             throw new Exception($e->getMessage());
         }
     }
@@ -103,21 +98,23 @@ class GoHighLevel
     /**
      * Get tags for a location
      */
-    public function getTags($data)
+    public function getTags()
     {
         try {
-            $res = $this->curl("/locations/{$data['location_id']}/tags", "GET");
+            $res = $this->curl("/locations/{$this->location_id}/tags", "GET");
 
             $tags = [];
-            if (isset($res['tags'])) {
-                foreach ($res['tags'] as $data) {
+            if (!empty($res['tags'])) {
+                foreach ($res['tags'] as $tag) {
                     $tags[] = [
-                        'id'   => $data['id'],
-                        'name' => $data['name']
+                        'id'   => $tag['name'],
+                        'name' => $tag['name']
                     ];
                 }
             }
+
             return $tags;
+
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
         }
@@ -130,23 +127,18 @@ class GoHighLevel
     public function addContact($data, $remove_tags = [], $add_tags = [])
     {
         try {
-            if (empty($data['email']) || empty($data['location_id'])) {
+            if (empty($data['email']) || empty($this->location_id)) {
                 throw new \Exception("Email and location_id are required");
             }
 
             // Build upsert payload (locationId must be included in body)
             $payload = [
-                'locationId' => $data['location_id'],
+                'locationId' => $this->location_id,
                 'email'      => $data['email'],
                 'firstName'  => $data['first_name'] ?? '',
                 'lastName'   => $data['last_name'] ?? '',
-                // optional phone / customFields if you have them:
-                //'phone' => $data['phone'] ?? null,
-                //'customFields' => $data['custom_fields'] ?? []
             ];
 
-            // DON'T rely only on tags inside the upsert if you want to *add* tags.
-            // Some implementations overwrite tags when upserting. Safer to upsert then call add-tags.
             if (!empty($add_tags)) {
                 // you may pass tags to upsert, but we'll add them after upsert to avoid overwriting.
                 $payload['tags'] = $add_tags;
@@ -155,7 +147,7 @@ class GoHighLevel
             // call upsert
             $res = $this->curl('/contacts/upsert', 'POST', $payload);
 
-            // defensive extraction of contactId (response varies)
+            // defensive extraction of contactId
             $contactId = $res['id'] ?? $res['contact']['id'] ?? $res['data'][0]['id'] ?? null;
             if (!$contactId && isset($res['contactId'])) {
                 $contactId = $res['contactId'];
@@ -163,7 +155,7 @@ class GoHighLevel
 
             if (!$contactId) {
                 // best-effort: if upsert didn't return id, try a search by email
-                $found = $this->searchContactByEmail($data['email'], $data['location_id']);
+                $found = $this->searchContactByEmail($data['email'], $this->location_id);
                 $contactId = $found['id'] ?? null;
             }
 
@@ -171,16 +163,8 @@ class GoHighLevel
                 throw new \Exception("Contact created but ID not returned.");
             }
 
-            // Add tags (use add tags endpoint to avoid overwriting)
-            if (!empty($add_tags)) {
-                $this->curl("/contacts/{$contactId}/tags", 'POST', ['tags' => array_values($add_tags)]);
-            }
-
-            // Remove tags (use remove tags endpoint)
-            if (!empty($remove_tags)) {
-                // DELETE with JSON body; your curl helper already supports sending JSON on DELETE/PUT via CURLOPT_POSTFIELDS
-                $this->curl("/contacts/{$contactId}/tags", 'DELETE', ['tags' => array_values($remove_tags)]);
-            }
+            // sync contact tags
+            $this->updateContactTags($contactId, $add_tags, $remove_tags);
 
             return $this->successResponse();
         } catch (\Exception $e) {
@@ -188,6 +172,54 @@ class GoHighLevel
         }
     }
 
+    /**
+     * Update/remove tags from a contact
+     * @param $contactId
+     * @param array $add_tags
+     * @param array $remove_tags
+     * @return int[]
+     * @throws Exception
+     */
+    private function updateContactTags($contactId, $add_tags = [], $remove_tags = [])
+    {
+        try {
+            // 1. Get current contact
+            $contact = $this->curl("/contacts/{$contactId}", "GET");
+
+            if (empty($contact['contact'])) {
+                throw new Exception("Contact not found");
+            }
+
+            $currentTags = $contact['contact']['tags'] ?? [];
+
+            // 2. Merge tags
+            $finalTags = array_unique(array_merge($currentTags, $add_tags));
+
+            if (!empty($remove_tags)) {
+                $finalTags = array_diff($finalTags, $remove_tags);
+            }
+
+            // 3. Update contact with final tag list
+            $payload = [
+                'tags' => array_values($finalTags)
+            ];
+
+            $this->curl("/contacts/{$contactId}", "PUT", $payload);
+
+            return $this->successResponse();
+
+        } catch (Exception $e) {
+            throw new Exception("Failed to update tags: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Search contact by email and location ID
+     * @param $email
+     * @param $locationId
+     * @return mixed
+     * @throws Exception
+     */
     private function searchContactByEmail($email, $locationId)
     {
         $payload = [
@@ -213,13 +245,58 @@ class GoHighLevel
     public function verifyCredentials()
     {
         try {
-            $this->getLocations();
+            $this->getTags();
             return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
         } catch (Exception $e) {
             return json_encode(['error' => 1, 'message' => $e->getMessage()]);
         }
     }
 
+    /**
+     * Regenerate a new access token using the refresh token
+     * @param string $refreshToken
+     * @return array
+     * @throws Exception
+     */
+    public function regenrateAccessToken($refreshToken)
+    {
+        try {
+            $response = $this->curl(
+                "/oauth/token",
+                "POST",
+                [
+                    'client_id'     => $this->client_id,
+                    'client_secret' => $this->client_secret,
+                    'grant_type'    => 'refresh_token',
+                    'refresh_token' => $refreshToken,
+                ],
+                false,   // no auth header
+                null,
+                true     // send as form data
+            );
+
+            if (empty($response['access_token'])) {
+                throw new Exception("Failed to regenerate access token");
+            }
+
+            return $response;
+
+        } catch (Exception $e) {
+            throw new Exception("Token refresh failed: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generic curl request for API calls
+     * @param $endpoint
+     * @param string $method
+     * @param array $data
+     * @param bool $auth
+     * @param null $overrideToken
+     * @param false $form
+     * @return mixed
+     * @throws Exception
+     */
     private function curl($endpoint, $method = "GET", $data = [], $auth = true, $overrideToken = null, $form = false)
     {
         $url = $this->base_url . $endpoint;
@@ -264,7 +341,6 @@ class GoHighLevel
         $status   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        print_r($response);
         if ($error) {
             throw new Exception("cURL Error: $error");
         }
