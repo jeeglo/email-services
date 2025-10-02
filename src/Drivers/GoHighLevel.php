@@ -31,8 +31,7 @@ class GoHighLevel
             'response_type' => 'code',
             'client_id'     => $this->client_id,
             'redirect_uri'  => $this->redirect_url,
-            'scope'         => 'locations/tags.write locations/tags.readonly contacts.write contacts.readonly',
-            'version_id'    => '68d665695426945316ca23ad',
+            'scope'         => 'locations/tags.readonly contacts.write contacts.readonly',
         ]);
 
         $url = "https://marketplace.gohighlevel.com/oauth/chooselocation?$query";
