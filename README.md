@@ -25,3 +25,4 @@ This library provides a uniform way to integrate with several email services. Cu
 - Acumbamail
 - Vbout
 - Grawt
+- GoHighLevel
