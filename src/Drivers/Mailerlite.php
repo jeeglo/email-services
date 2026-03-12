@@ -84,7 +84,7 @@ class Mailerlite
                 foreach ($lists as $list) {
                     $response[] = array(
                         'name' => $list->name,
-                        'id' => $list->id
+                        'id' => (string) $list->id
                     );
                 }
             }
