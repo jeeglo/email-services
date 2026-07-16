@@ -4,8 +4,10 @@ namespace Jeeglo\EmailService\Drivers;
 use MailerLiteApi\MailerLite as MailerliteApi;
 use MailerLiteApi\Api\Groups;
 
-class Mailerlite 
+class Mailerlite
 {
+    private const GROUPS_PAGE_SIZE = 100;
+
     protected $api_key;
     protected $mailerlite;
 
@@ -24,15 +26,33 @@ class Mailerlite
     public function getLists()
     {
         try {
-            $lists = $this->mailerlite->groups()->orderBy('name', 'ASC')->get();
+            $lists = [];
+            $offset = 0;
 
-            if(empty($lists) || !count($lists) ) {
+            do {
+                $page = $this->mailerlite
+                    ->groups()
+                    ->orderBy('name', 'ASC')
+                    ->limit(self::GROUPS_PAGE_SIZE)
+                    ->offset($offset)
+                    ->get();
+
+                $page_count = count($page);
+
+                foreach ($page as $list) {
+                    $lists[] = $list;
+                }
+
+                $offset += self::GROUPS_PAGE_SIZE;
+            } while ($page_count === self::GROUPS_PAGE_SIZE);
+
+            if (empty($lists)) {
                 return $this->failedResponse();
             }
 
             return $this->response($lists);
-        } catch (Exception $e) {
-           throw new \Exception($e->getMessage());
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
         }
     }
 
