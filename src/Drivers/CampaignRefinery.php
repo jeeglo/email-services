@@ -4,202 +4,201 @@ namespace Jeeglo\EmailService\Drivers;
 
 class CampaignRefinery
 {
-    /**
-     * define teh API Key
-     * @var string
-     */
     protected $api_key;
-
-    /**
-     * define teh API Base URL
-     * @var string
-     */
     protected $api_url;
 
-    /**
-     * Set the construct value
-     * CampaignRefinery constructor.
-     * @param $credentials
-     */
     public function __construct($credentials) {
         $this->api_key = $credentials['api_key'];
-        $this->api_url = "https://app.campaignrefinery.com/rest/";
+        $this->api_url = "https://api.campaignrefinery.com/rest/";
     }
 
     /**
-     * fetch tags through API
-     * @return array
-     * @throws \Exception
+     * Get ALL Tags (with pagination)
      */
     public function getTags() {
         try {
-            $res = $this->curl('tags/get-tags');
+            $tags = [];
+            $page = 1;
 
-            if($res) {
-                $tags = [];
+            do {
+                $res = $this->curl("tags/get_tags?page=".$page);
+                if (!$res) break;
 
-                // decode the response
-                $tags_data = json_decode($res, true);
+                $response = json_decode($res, true);
 
-                // if we found the tags key data then append in the array
-                if (isset($tags_data['tags'])) {
-                    foreach ($tags_data['tags'] as $data) {
-                        $tags[] = array(
-                            'id' => $data['tag_uuid'],
-                            'name' => $data['tag_name']
-                        );
+                if (isset($response['data']['data'])) {
+                    foreach ($response['data']['data'] as $tag) {
+                        $tags[] = [
+                            'id' => $tag['tag_uuid'],
+                            'name' => $tag['tag_name']
+                        ];
                     }
 
-                    return $tags;
+                    $nextPage = $response['data']['next_page_url'];
+                    $page++;
+                } else {
+                    $nextPage = null;
                 }
-            }
+
+            } while ($nextPage);
+
+            return $tags;
+
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }
 
     /**
-     * Get the Forms through API (it's called Forms in CR instead of Lists)
-     * @return array
-     * @throws \Exception
+     * Get ALL Forms (Lists)
      */
     public function getLists()
     {
         try {
-            // Initialize the forms array to append
             $forms = [];
+            $page = 1;
 
-            //  send the call to API to fetch
-            $res = $this->curl('forms/get-forms');
+            do {
+                $res = $this->curl("forms/get_forms?page=".$page);
+                if (!$res) break;
 
-            if($res) {
-                // decode the response
-                $forms_data = json_decode($res, true);
+                $response = json_decode($res, true);
 
-                // if we found the forms key data then append in the array
-                if (isset($forms_data['forms'])) {
-                    foreach ($forms_data['forms'] as $data) {
-                        $forms[] = array(
-                            'id' => $data['form_uuid'],
-                            'name' => $data['form_name']
-                        );
+                if (isset($response['data']['data'])) {
+                    foreach ($response['data']['data'] as $form) {
+                        $forms[] = [
+                            'id' => $form['form_uuid'],
+                            'name' => $form['form_name']
+                        ];
                     }
 
-                    return $forms;
+                    $nextPage = $response['data']['next_page_url'];
+                    $page++;
+                } else {
+                    $nextPage = null;
                 }
-            }
+
+            } while ($nextPage);
+
+            return $forms;
+
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }
 
     /**
-     * [addContact Add contact to list through API]
-     * @return array [return success or fail]
-     * @throws \Exception
+     * Add Contact + Tag Sync
      */
-    public function addContact($data,  $remove_tags = [] , $add_tags = [])
+    public function addContact($data, $remove_tags = [], $add_tags = [])
     {
         try {
-            // modify the data to add contact according to CR API requirement
-            $data['key'] = $this->api_key;
-            $data['form_id'] = $data['list_id'];
+            $payload = [
+                "email" => $data['email'],
+                "first_name" => $data['first_name'] ?? null,
+                "last_name" => $data['last_name'] ?? null,
+                "form_id" => $data['list_id'] ?? null
+            ];
 
-            // send call to API to add contact
-            $res =  $this->curl('contacts/subscribe', $data, "POST");
+            $res = $this->curl('contacts/subscribe', $payload, "POST");
 
-            if($res) {
-                // decode the response
-                $contact = json_decode($res);
+            if ($res) {
+                $response = json_decode($res, true);
 
-                // if response has contact id then assign it into data
-                if(isset($contact->id)) {
-                    // if successfully added contact the call add tag api to add contact - then call the remove tag API to remove tags from contact
-                    $data['id'] = $contact->id;
-                    $this->sync($data, $add_tags, $remove_tags);
+                if (isset($response['data']['contact_uuid'])) {
+                    $contact_uuid = $response['data']['contact_uuid'];
+
+                    $this->sync($contact_uuid, $add_tags, $remove_tags);
                 }
 
                 return $this->successResponse();
             }
+
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }
 
     /**
-     * [sync add and remove tags]
-     * @param $data
-     * @param $removeTags
-     * @param $addTags
-     * @return void [array] [Success true]
-     * @throws \Exception
+     * Add / Remove Tags (FIXED PARAMS)
      */
-    private function sync($data, $addTags ,$removeTags)
+    private function sync($contact_uuid, $addTags ,$removeTags)
     {
         try {
-            // check if we have tags data to add
-            if(is_array($addTags) && count($addTags) > 0) {
-                // Preparing the tags node for adding tags
-                $data['tag_ids'] = implode(",", $addTags);
-                // Call the API to add tags
-                $this->curl('contacts/add-tag', $data, "POST");
+            // Add Tags
+            if (!empty($addTags)) {
+                $payload = [
+                    "id" => $contact_uuid,
+                ];
+
+                if (count($addTags) === 1) {
+                    $payload["tag_id"] = reset($addTags); // single
+                } else {
+                    $payload["tag_ids"] = implode(',', array_values($addTags)); // multiple
+                }
+
+                $this->curl('contacts/add_tags', $payload, "POST");
             }
 
-            // check if we have tags data to remove
-            if(is_array($removeTags) && count($removeTags) > 0 ) {;
-                // Preparing the tags node for removing tags
-                $data['tag_ids'] = implode(",", $removeTags);
+            // Remove Tags
+            if (!empty($removeTags)) {
+                $payload = [
+                    "id" => $contact_uuid,
+                ];
 
-                // Call the API to remove tags
-                $this->curl('contacts/delete-tag', $data, "POST");
+                if (count($removeTags) === 1) {
+                    $payload["tag_id"] = reset($removeTags);
+                } else {
+                    $payload["tag_ids"] = implode(',', array_values($removeTags));
+                }
+
+                $this->curl('contacts/delete_tags', $payload, "POST");
             }
+
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }
 
     /**
-     * Request Method
-     * @return array for getList
-     * @return array for addContact
+     * CURL Request Handler
      */
     private function curl($api_method, $data = [], $method = 'GET', $headers = [])
     {
-        $url = $this->api_url.$api_method;
-        $curl = curl_init($url);
+        $url = $this->api_url . $api_method;
 
-        // set the curl GET params is request type is GET
-        if($method == 'GET') {
-            curl_setopt_array($curl, array(
-                CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_URL => $url."?key=".$this->api_key,
-            ));
+        $curl = curl_init();
+
+        $defaultHeaders = [
+            'Authorization: Bearer ' . $this->api_key,
+            'Content-Type: application/json',
+            'Accept: application/json',
+        ];
+
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_HTTPHEADER => array_merge($defaultHeaders, $headers),
+        ]);
+
+        if ($method !== 'GET' && !empty($data)) {
+            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
         }
 
-        // set the curl POST params is request type is POST
-        if($method == 'POST') {
-            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-                'Content-Type: multipart/form-data',
-            ));
-
-            curl_setopt($curl, CURLOPT_POST, 1);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        }
-
-        // execute Curl
         $response = curl_exec($curl);
 
-        // close the connection of Curl
+        if (curl_errno($curl)) {
+            throw new \Exception(curl_error($curl));
+        }
+
         curl_close($curl);
 
-        // return the response
         return $response;
     }
 
     /**
-     * [successResponse description]
-     * @return [array] [Success true]
+     * Success Response
      */
     private function successResponse()
     {
@@ -207,21 +206,20 @@ class CampaignRefinery
     }
 
     /**
-     * CampaignRefinery test credentials
+     * Verify API Credentials
      */
     public function verifyCredentials()
     {
+        $response = $this->curl('forms/get_forms');
+        $response = json_decode($response, true);
 
-        $response = $this->curl('forms/get-forms');
-
-        $response = json_decode($response, TRUE);
-
-        if (isset($response['error'])) {
-            return json_encode(['error' => 1, 'message' => $response['error']]);
-
-        } else {
+        if (isset($response['success']) && $response['success'] === true) {
             return json_encode(['error' => 0, 'message' => 'Connection succeeded.']);
-
         }
+
+        return json_encode([
+            'error' => 1,
+            'message' => $response['message'] ?? 'Invalid API Key'
+        ]);
     }
 }
